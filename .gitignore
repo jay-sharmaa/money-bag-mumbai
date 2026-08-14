@@ -1,5 +1,4 @@
 logs/
 .moneybags-pids/
 /transaction-service/target/
-/statement-reporting-service/target/
-/statement-reporting-service/data/
+.env

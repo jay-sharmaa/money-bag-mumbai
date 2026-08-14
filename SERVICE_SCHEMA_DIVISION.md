@@ -16,7 +16,8 @@ API or domain event, not a cross-database foreign key.
 | Bank Organisation | `branches`, `employees` | New service; extract from current `security-service` |
 | Account | `accounts`, `account_approvals` | Keep current `account-service` |
 | Transaction | `transactions`, `transaction_rail_details`, `transaction_legs`, `funds_holds`, `journal_entries`, `journal_lines`, `clearing_instructions`, `outbox_events`, `transaction_status_history`, `idempotency_records`, `callback_receipts`, `transaction_limit_rules`, `reconciliation_exceptions` | Implemented in `transaction-service` |
-| Statement | `moneybags_statement` (optional) | Optional read models: `account_statement_lines`, `statement_exports` | Keep current `statement-service` read-only |
+| Ledger | `MONEYBAGS_LEDGER` | `ledger_accounts`, `journal_entries`, `journal_lines` | Posts Transaction Service journal facts and owns GL balances |
+| Statement | `MONEYBAGS_STATEMENT` | Statement/account/transaction read models and generated exports | Keep `statement-reporting-service` read-only |
 | API Gateway | None | None | Keep current `api-gateway` |
 | Eureka Server | None | None | Keep current `eureka-server` |
 
@@ -161,14 +162,15 @@ Posted financial facts are immutable; reversals use a new linked compensating tr
 Cross-service balance instructions are committed through the transactional outbox.
 ```
 
-Keep transaction facts, journals, clearing, history, and outbox records in one service consistency boundary. Ledger account mappings are configuration/reference data; live customer balances are never stored here.
+Keep transaction facts, journals, clearing, history, and outbox records in one service consistency boundary. The local journal is the immutable source fact. After the customer account projection succeeds and the transaction reaches `COMPLETED`, its outbox projection is posted idempotently to Ledger Service. Live customer balances are never stored here.
 
 ## Statement Service
 
-Statement Service is read-only. It obtains account metadata from Account
-Service and posted transaction/ledger data from Ledger Service. It does not
-write account balances or ledger entries. Add local read-model tables only when
-statement generation needs independent query scale or stored exports.
+Statement Service is read-only. After the transaction reaches `COMPLETED` and
+Ledger Service accepts its journal, Transaction Service projects a
+posted transaction event into the statement read model. It does not write
+account balances or ledger entries. Generated statement files remain an
+explicit on-demand or scheduled operation over that read model.
 
 ## Services not required yet
 

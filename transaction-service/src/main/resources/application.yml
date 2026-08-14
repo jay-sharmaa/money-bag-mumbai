@@ -1,20 +1,27 @@
 server:
   port: 8084
 spring:
+  config:
+    import: optional:file:./.env[.properties],optional:file:../.env[.properties]
   application:
     name: transaction-service
   datasource:
-    url: ${TRANSACTION_DB_URL:jdbc:mysql://localhost:3306/moneybags_transaction?createDatabaseIfNotExist=true}
-    username: ${TRANSACTION_DB_USERNAME:root}
-    password: ${TRANSACTION_DB_PASSWORD:password}
+    url: ${DBURL}
+    username: ${DBUSER}
+    password: ${DBPASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
   jpa:
     hibernate:
       ddl-auto: validate
+    database-platform: org.hibernate.dialect.OracleDialect
     open-in-view: false
     properties:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
+    table: flyway_transaction_history
+    baseline-on-migrate: true
+    baseline-version: 0
 eureka:
   client:
     service-url:
@@ -31,6 +38,8 @@ springdoc:
     path: /swagger-ui.html
 moneybags:
   transaction:
+    ledger-service-url: ${LEDGER_SERVICE_URL:http://localhost:8085}
+    statement-service-url: ${STATEMENT_SERVICE_URL:http://localhost:8086}
     default-currency: INR
     mini-statement-size: 10
     outbox:

@@ -1,12 +1,13 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:ledgerdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    url: jdbc:h2:mem:ledgerdb;MODE=Oracle;DB_CLOSE_DELAY=-1
     username: sa
     password:
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.OracleDialect
     open-in-view: false
   flyway:
     enabled: true
@@ -25,9 +26,9 @@ moneybags:
       accounts:
         10001:
           customer-id: 101
-          currency-code: USD
+          currency-code: INR
           status: ACTIVE
         20001:
           customer-id: 202
-          currency-code: USD
+          currency-code: INR
           status: ACTIVE

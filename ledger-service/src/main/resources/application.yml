@@ -2,21 +2,27 @@ server:
   port: 8085
 
 spring:
+  config:
+    import: optional:file:./.env[.properties],optional:file:../.env[.properties]
   application:
     name: ledger-service
   datasource:
-    url: ${LEDGER_DB_URL:jdbc:mysql://localhost:3306/moneybags_ledger?createDatabaseIfNotExist=true&serverTimezone=UTC}
-    username: ${LEDGER_DB_USERNAME:root}
-    password: ${LEDGER_DB_PASSWORD:password}
+    url: ${DBURL}
+    username: ${DBUSER}
+    password: ${DBPASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
   jpa:
     hibernate:
       ddl-auto: validate
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.OracleDialect
     open-in-view: false
     properties:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
+    table: flyway_ledger_history
+    baseline-on-migrate: true
+    baseline-version: 0
 
 eureka:
   client:
@@ -37,7 +43,7 @@ springdoc:
 
 moneybags:
   ledger:
-    default-currency: USD
+    default-currency: INR
     accounts:
       cash-asset: "110100"
       account-deposit-control: "210000"
@@ -49,9 +55,9 @@ moneybags:
       accounts:
         10001:
           customer-id: 101
-          currency-code: USD
+          currency-code: INR
           status: ACTIVE
         20001:
           customer-id: 202
-          currency-code: USD
+          currency-code: INR
           status: ACTIVE

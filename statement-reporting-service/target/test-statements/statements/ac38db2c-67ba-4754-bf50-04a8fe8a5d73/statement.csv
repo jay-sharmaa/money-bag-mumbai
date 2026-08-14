@@ -1,0 +1,5 @@
+Account,From,To,Opening Balance,Closing Balance,Currency
+"XXXX1234",2026-08-01,2026-08-31,750.00,1250.00,INR
+
+Date,Reference,Transaction ID,Ledger Entry ID,Description,Debit,Credit,Balance,Reversal Of
+2026-08-01T10:00:00Z,"MB-1","tx-1","ledger-1","Opening deposit",,500.00,1250.00,""

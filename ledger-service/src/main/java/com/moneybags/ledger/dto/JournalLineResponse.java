@@ -10,7 +10,7 @@ public record JournalLineResponse(
         int lineNumber,
         String ledgerCode,
         String ledgerAccountName,
-        Long customerAccountId,
+        String customerAccountId,
         EntrySide side,
         BigDecimal amount,
         String description,

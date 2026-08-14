@@ -32,7 +32,7 @@ public class JournalQueryService {
                 .orElseThrow(() -> new JournalNotFoundException(reference)));
     }
 
-    public List<JournalResponse> search(Long transactionId, Long customerAccountId) {
+    public List<JournalResponse> search(String transactionId, String customerAccountId) {
         if (transactionId != null && customerAccountId != null) {
             throw new InvalidJournalException("Use either transactionId or customerAccountId, not both");
         }
@@ -44,7 +44,7 @@ public class JournalQueryService {
         return journals.stream().map(mapper::toJournalResponse).toList();
     }
 
-    public List<CustomerLedgerEntryResponse> customerEntries(Long accountId) {
+    public List<CustomerLedgerEntryResponse> customerEntries(String accountId) {
         return lineRepository.findByCustomerAccountIdOrderByCreatedAtDesc(accountId).stream()
                 .map(mapper::toCustomerEntryResponse).toList();
     }

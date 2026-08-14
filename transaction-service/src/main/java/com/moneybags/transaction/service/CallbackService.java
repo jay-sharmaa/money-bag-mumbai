@@ -45,7 +45,7 @@ public class CallbackService {
         Transaction tx=orchestrator.get(transactionId); if(replay("FAIL",request,tx))return tx;
         if(tx.getStatus().terminal()) throw DomainException.conflict("INVALID_STATE_TRANSITION","Terminal transaction cannot receive failure callback");
         clearingRepository.findByTransactionId(tx.getId()).ifPresent(c->{c.setStatus(ClearingStatus.FAILED);c.setFailureReason(request.reason());});
-        List<OutboxEvent> events=outboxEvents.findByAggregateId(tx.getId()); boolean projected=events.stream().anyMatch(e->e.getStatus()==OutboxStatus.PUBLISHED);
+        List<OutboxEvent> events=outboxEvents.findByAggregateId(tx.getId()); boolean projected=events.stream().anyMatch(e->e.getStatus()==OutboxStatus.PUBLISHED&&!OutboxService.LEDGER_JOURNAL.equals(e.getEventType())&&!OutboxService.STATEMENT_PROJECTION.equals(e.getEventType()));
         events.stream().filter(e->e.getStatus()==OutboxStatus.PENDING).forEach(e->{e.setStatus(OutboxStatus.FAILED);e.setLastError("Cancelled after definitive rail failure");});
         FundsHold hold=holds.findByTransactionId(tx.getId()).orElse(null);
         if(hold!=null&&hold.getStatus()==HoldStatus.FUNDS_HELD){accounts.release(hold.getAccountId(),hold.getExternalHoldId(),"failure-release:"+tx.getId());hold.setStatus(HoldStatus.RELEASED);}
@@ -65,5 +65,5 @@ public class CallbackService {
         if(!old.get().getTransaction().getId().equals(tx.getId()))throw DomainException.conflict("CALLBACK_IDEMPOTENCY_CONFLICT","Provider event belongs to another transaction"); return true;
     }
     private void record(String type,CallbackRequest request,Transaction tx){receipts.save(CallbackReceipt.builder().transaction(tx).callbackType(type).providerEventId(request.providerEventId()).requestHash(hasher.hash(request)).build());}
-    private boolean allPublished(String transactionId){List<OutboxEvent> events=outboxEvents.findByAggregateId(transactionId);return !events.isEmpty()&&events.stream().allMatch(e->e.getStatus()==OutboxStatus.PUBLISHED);}
+    private boolean allPublished(String transactionId){List<OutboxEvent> events=outboxEvents.findByAggregateId(transactionId);List<OutboxEvent> accountEvents=events.stream().filter(e->!OutboxService.LEDGER_JOURNAL.equals(e.getEventType())&&!OutboxService.STATEMENT_PROJECTION.equals(e.getEventType())).toList();return !accountEvents.isEmpty()&&accountEvents.stream().allMatch(e->e.getStatus()==OutboxStatus.PUBLISHED);}
 }

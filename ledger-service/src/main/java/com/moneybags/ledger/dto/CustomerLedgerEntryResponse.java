@@ -9,11 +9,11 @@ import java.time.Instant;
 public record CustomerLedgerEntryResponse(
         Long journalId,
         String journalReference,
-        Long transactionId,
+        String transactionId,
         JournalStatus journalStatus,
         int lineNumber,
         String ledgerCode,
-        Long customerAccountId,
+        String customerAccountId,
         EntrySide side,
         BigDecimal amount,
         String currencyCode,

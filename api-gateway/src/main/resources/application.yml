@@ -2,70 +2,126 @@ server:
   port: 8090
 
 spring:
+  config:
+    import: optional:file:./.env[.properties],optional:file:../.env[.properties]
   application:
     name: api-gateway
+
   cloud:
     gateway:
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+
       routes:
+
+        # =====================================================
+        # CUSTOMER SERVICE
+        # =====================================================
         - id: customer-service
           uri: lb://customer-service
           predicates:
             - Path=/api/v1/customers/**
+
         - id: customer-service-api-docs
           uri: lb://customer-service
           predicates:
             - Path=/customer-service/api-docs,/customer-service/api-docs/**
           filters:
             - StripPrefix=1
+
+
+        # =====================================================
+        # TRANSACTION SERVICE
+        # =====================================================
         - id: transaction-service
           uri: lb://transaction-service
           predicates:
             - Path=/api/v1/transactions/**,/api/v1/accounts/*/transactions,/api/v1/accounts/*/mini-statement,/api/v1/reconciliation/**
+
         - id: transaction-service-api-docs
           uri: lb://transaction-service
           predicates:
             - Path=/transaction-service/api-docs,/transaction-service/api-docs/**
           filters:
             - StripPrefix=1
+
+
+        # =====================================================
+        # LEDGER SERVICE
+        # =====================================================
+        - id: ledger-service
+          uri: lb://ledger-service
+          predicates:
+            - Path=/api/v1/ledger/**,/api/v1/ledgers/**
+
+        - id: ledger-service-api-docs
+          uri: lb://ledger-service
+          predicates:
+            - Path=/ledger-service/api-docs,/ledger-service/api-docs/**
+          filters:
+            - StripPrefix=1
+
+
+        # =====================================================
+        # STATEMENT REPORTING SERVICE
+        # =====================================================
         - id: statement-reporting-service
           uri: lb://statement-reporting-service
           predicates:
             - Path=/api/v1/statements/**,/api/v1/reports/**,/api/v1/report-schedules/**
+
         - id: statement-reporting-service-api-docs
           uri: lb://statement-reporting-service
           predicates:
             - Path=/statement-reporting-service/api-docs,/statement-reporting-service/api-docs/**
           filters:
             - StripPrefix=1
-        - id: customer-service-static-openapi
-          uri: lb://customer-service
-          predicates:
-            - Path=/customer-service/openapi.yml
-          filters:
-            - StripPrefix=1
 
+
+# =========================================================
+# EUREKA
+# =========================================================
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8080/eureka/
+    register-with-eureka: true
+    fetch-registry: true
 
+
+# =========================================================
+# ACTUATOR
+# =========================================================
 management:
   endpoints:
     web:
       exposure:
         include: health,info
 
+
+# =========================================================
+# SWAGGER / OPENAPI
+# =========================================================
 springdoc:
+  api-docs:
+    enabled: true
+
   swagger-ui:
     path: /swagger-ui.html
+
     urls:
-      - name: customer-service
+      - name: Customer Service
         url: /customer-service/api-docs
-      - name: transaction-service
+
+      - name: Transaction Service
         url: /transaction-service/api-docs
-      - name: statement-reporting-service
+
+      - name: Ledger Service
+        url: /ledger-service/api-docs
+
+      - name: Statement Reporting Service
         url: /statement-reporting-service/api-docs
+
+    urls-primary-name: Customer Service

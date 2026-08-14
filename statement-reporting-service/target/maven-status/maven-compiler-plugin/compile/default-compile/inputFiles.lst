@@ -1,0 +1,16 @@
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\ApiModels.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\Controllers.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\Errors.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\ExportService.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\FileStorageService.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\OpenApiConfig.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\PersistenceModels.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\ProjectionService.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\ReportingService.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\Repositories.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\RequestSecurity.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\ScheduleService.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\SourceFallbackClient.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\StatementProperties.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\StatementReportingApplication.java
+C:\MoneyBags\moneybags\statement-reporting-service\src\main\java\com\moneybags\statement\StatementService.java

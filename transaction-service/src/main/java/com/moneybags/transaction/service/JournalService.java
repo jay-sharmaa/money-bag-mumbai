@@ -17,6 +17,7 @@ public class JournalService {
     private final TransactionLegRepository legs;
     private final JournalEntryRepository journals;
     private final TransactionProperties properties;
+    private final OutboxService outbox;
 
     public void createInitialFinancialFacts(Transaction tx){
         createLegs(tx);
@@ -72,6 +73,7 @@ public class JournalService {
         JournalEntry entry=JournalEntry.builder().transaction(tx).reference("JRN-"+tx.getReference()+"-"+type).type(type).status(JournalStatus.POSTED).totalDebit(debits).totalCredit(credits).postedAt(Instant.now()).build();
         int n=1; for(Line line:lines) entry.addLine(JournalLine.builder().lineNo(n++).ledgerAccountCode(line.code()).accountId(line.accountId()).debit(line.debit()).credit(line.credit()).description(line.description()).build());
         journals.save(entry);
+        outbox.ledgerJournal(tx,entry);
     }
     private TransactionLeg leg(Transaction tx,int n,LegRole role,Direction direction,String account,BigDecimal amount,String description){return TransactionLeg.builder().transaction(tx).sequenceNo(n).role(role).direction(direction).accountId(account).amount(amount).currency(tx.getCurrency()).description(description).build();}
     private Line dr(String code,String account,BigDecimal amount,String description){return new Line(code,account,amount,BigDecimal.ZERO,description);}

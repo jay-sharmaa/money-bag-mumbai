@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,9 @@ public class OpenApiConfig {
         return new OpenAPI().info(new Info()
                 .title("Moneybags Statement & Reporting Service")
                 .version("v1")
-                .description("Swagger test order: project an account, project transactions, then call statements and reports."));
+                .description("Swagger test order: project an account, project transactions, then call statements and reports."))
+                .addServersItem(new Server().url("http://localhost:8090").description("API Gateway"))
+                .addServersItem(new Server().url("http://localhost:8086").description("Statement Reporting Service directly"));
     }
 
     @Bean

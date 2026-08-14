@@ -34,19 +34,20 @@ class TransactionServiceIntegrationTest {
     @Autowired TransactionRepository transactions; @Autowired TransactionLegRepository legs; @Autowired FundsHoldRepository holds; @Autowired JournalEntryRepository journals;
     @Autowired ClearingInstructionRepository clearing; @Autowired OutboxEventRepository outbox;
     @Autowired MockMvc mockMvc;
-    @MockBean AccountClient accountClient; @MockBean CardClient cardClient;
+    @MockBean AccountClient accountClient; @MockBean CardClient cardClient; @MockBean LedgerClient ledgerClient; @MockBean StatementClient statementClient;
     RequestActor maker;
 
     @BeforeEach void setup(){
         maker=new RequestActor("EMP-100","MB001",Set.of("TRANSACTION_CREATE","TRANSACTION_VIEW","TRANSACTION_APPROVE","TRANSACTION_CANCEL","TRANSACTION_REVERSE","RECONCILIATION_MANAGE"),"corr-1");
         when(accountClient.context(anyString())).thenAnswer(i->new AccountClient.AccountContext(i.getArgument(0),"AH-1","ACTIVE","INR",new BigDecimal("5000000"),new BigDecimal("5000000"),1));
         when(accountClient.reserve(anyString(),anyString(),any())).thenAnswer(i->{AccountClient.HoldRequest r=i.getArgument(2);return new AccountClient.HoldResponse("H-"+r.transactionId(),"FUNDS_HELD",r.amount());});
+        doAnswer(i->{LedgerClient.JournalPostRequest r=i.getArgument(0);assertThat(transactions.findById(r.transactionId()).orElseThrow().getCompletedAt()).isNotNull();return null;}).when(ledgerClient).post(any());
     }
     @AfterEach void resetOutbox(){properties.getOutbox().setEnabled(false);}
 
     @Test void depositCreatesLegBalancedJournalAndOutbox(){
         Transaction tx=orchestrator.create(TransactionType.DEPOSIT,PaymentRail.CASH,deposit(),"dep-1",maker);
-        assertThat(tx.getStatus()).isEqualTo(TransactionStatus.PROJECTION_PENDING);assertThat(legs.findByTransactionIdOrderBySequenceNo(tx.getId())).hasSize(1);assertThat(journals.findByTransactionIdOrderByCreatedAt(tx.getId())).hasSize(1);assertThat(outbox.findByAggregateId(tx.getId())).hasSize(1);assertThat(holds.findByTransactionId(tx.getId())).isEmpty();
+        assertThat(tx.getStatus()).isEqualTo(TransactionStatus.PROJECTION_PENDING);assertThat(legs.findByTransactionIdOrderBySequenceNo(tx.getId())).hasSize(1);assertThat(journals.findByTransactionIdOrderByCreatedAt(tx.getId())).hasSize(1);assertThat(outbox.findByAggregateId(tx.getId())).hasSize(2);assertThat(holds.findByTransactionId(tx.getId())).isEmpty();
     }
     @Test void duplicateCreateReturnsOriginalWithoutDuplicateHoldOrFacts(){
         Transaction first=orchestrator.create(TransactionType.WITHDRAWAL,PaymentRail.CASH,withdrawal(),"wd-dup",maker);Transaction second=orchestrator.create(TransactionType.WITHDRAWAL,PaymentRail.CASH,withdrawal(),"wd-dup",maker);
@@ -68,11 +69,12 @@ class TransactionServiceIntegrationTest {
     }
     @Test void outboxDeliveryConsumesHoldAndCompletesWithdrawalOnce(){
         Transaction tx=orchestrator.create(TransactionType.WITHDRAWAL,PaymentRail.CASH,withdrawal(),"wd-publish",maker);properties.getOutbox().setEnabled(true);publisher.publish();
-        assertThat(transactions.findById(tx.getId()).orElseThrow().getStatus()).isEqualTo(TransactionStatus.COMPLETED);assertThat(holds.findByTransactionId(tx.getId()).orElseThrow().getStatus().name()).isEqualTo("CONSUMED");verify(accountClient).project(anyString(),any());verify(accountClient).consume(eq("A1"),anyString(),anyString());
+        assertThat(transactions.findById(tx.getId()).orElseThrow().getStatus()).isEqualTo(TransactionStatus.COMPLETED);assertThat(holds.findByTransactionId(tx.getId()).orElseThrow().getStatus().name()).isEqualTo("CONSUMED");verify(accountClient,atLeastOnce()).project(anyString(),any());verify(accountClient).consume(eq("A1"),anyString(),anyString());
+        var ordered=inOrder(accountClient,ledgerClient,statementClient);ordered.verify(accountClient).project(anyString(),any());ordered.verify(ledgerClient).post(any());ordered.verify(statementClient).project(eq("transaction-service"),any());
     }
     @Test void duplicateSettlementCallbackCreatesOneSettlementEffect(){
         Transaction tx=orchestrator.create(TransactionType.NEFT,PaymentRail.NEFT,external(new BigDecimal("500")),"neft-settle",maker);properties.getOutbox().setEnabled(true);publisher.publish();
-        CallbackRequest cb=new CallbackRequest("rail-event-1","NEFT-EXT-1",LocalDate.now(),"SETTLED",null);callbacks.settle(tx.getId(),cb);callbacks.settle(tx.getId(),cb);
+        CallbackRequest cb=new CallbackRequest("rail-event-1","NEFT-EXT-1",LocalDate.now(),"SETTLED",null);callbacks.settle(tx.getId(),cb);callbacks.settle(tx.getId(),cb);publisher.publish();
         assertThat(transactions.findById(tx.getId()).orElseThrow().getStatus()).isEqualTo(TransactionStatus.COMPLETED);assertThat(journals.findByTransactionIdOrderByCreatedAt(tx.getId())).hasSize(2);
     }
     @Test void completedWithdrawalReversalIsLinkedAndCompensating(){
@@ -95,7 +97,7 @@ class TransactionServiceIntegrationTest {
     @Test void chequeCreditsAccountOnlyAfterSuccessfulClearing(){
         CreateRequest cheque=new CreateRequest(null,"A1",null,new BigDecimal("700"),BigDecimal.ZERO,"INR",PaymentChannel.BRANCH,PaymentMethod.CHEQUE,null,"CHQ-100", "Cheque deposit",null);
         Transaction tx=orchestrator.create(TransactionType.CHEQUE,PaymentRail.CHEQUE,cheque,"cheque-create",maker);assertThat(journals.findByTransactionIdOrderByCreatedAt(tx.getId())).isEmpty();assertThat(outbox.findByAggregateId(tx.getId())).isEmpty();
-        callbacks.cheque(tx.getId(),new CallbackRequest("cheque-event-1","CLR-CHQ-1",LocalDate.now(),"SETTLED",null));assertThat(journals.findByTransactionIdOrderByCreatedAt(tx.getId())).hasSize(1);assertThat(outbox.findByAggregateId(tx.getId())).hasSize(1);properties.getOutbox().setEnabled(true);publisher.publish();assertThat(transactions.findById(tx.getId()).orElseThrow().getStatus()).isEqualTo(TransactionStatus.COMPLETED);
+        callbacks.cheque(tx.getId(),new CallbackRequest("cheque-event-1","CLR-CHQ-1",LocalDate.now(),"SETTLED",null));assertThat(journals.findByTransactionIdOrderByCreatedAt(tx.getId())).hasSize(1);assertThat(outbox.findByAggregateId(tx.getId())).hasSize(2);properties.getOutbox().setEnabled(true);publisher.publish();assertThat(transactions.findById(tx.getId()).orElseThrow().getStatus()).isEqualTo(TransactionStatus.COMPLETED);
     }
     @Test void swaggerUiAndOpenApiDocumentAreAvailable() throws Exception {
         mockMvc.perform(get("/"))

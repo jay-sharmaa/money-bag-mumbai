@@ -11,6 +11,7 @@
         <module name="transaction-service" />
         <module name="statement-reporting-service" />
         <module name="eureka-server" />
+        <module name="ledger-service" />
       </profile>
       <profile name="Annotation profile for customer-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -24,13 +25,26 @@
         <module name="customer-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="account-service" target="17" />
+      <module name="moneybags" target="1.5" />
+      <module name="product-service" target="17" />
+      <module name="security-service" target="17" />
+      <module name="statement-service" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="account-service" options="-parameters" />
       <module name="api-gateway" options="-parameters" />
       <module name="customer-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
+      <module name="ledger-service" options="-parameters" />
+      <module name="moneybags" options="" />
+      <module name="product-service" options="-parameters" />
+      <module name="security-service" options="-parameters" />
       <module name="statement-reporting-service" options="-parameters" />
+      <module name="statement-service" options="-parameters" />
       <module name="transaction-service" options="-parameters" />
     </option>
   </component>

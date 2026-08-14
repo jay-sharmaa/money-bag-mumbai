@@ -1,6 +1,6 @@
 # Swagger-only testing
 
-Only Eureka, MySQL and Statement Reporting Service are required for this test. The dummy Account and Transaction/Ledger data is inserted through the service's internal projection endpoints, so Account Service and Transaction Service may remain stopped.
+Only Eureka, local Oracle, and Statement Reporting Service are required for this test. The dummy Account and Transaction/Ledger data is inserted through the service's internal projection endpoints, so Account Service and Transaction Service may remain stopped.
 
 ## 1. Start the services
 

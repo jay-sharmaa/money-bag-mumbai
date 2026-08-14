@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface JournalLineRepository extends JpaRepository<JournalLine, Long> {
     @EntityGraph(attributePaths = {"journalEntry", "ledgerAccount"})
-    List<JournalLine> findByCustomerAccountIdOrderByCreatedAtDesc(Long customerAccountId);
+    List<JournalLine> findByCustomerAccountIdOrderByCreatedAtDesc(String customerAccountId);
 }

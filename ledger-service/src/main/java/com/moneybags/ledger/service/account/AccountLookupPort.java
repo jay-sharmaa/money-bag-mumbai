@@ -1,7 +1,7 @@
 package com.moneybags.ledger.service.account;
 
 public interface AccountLookupPort {
-    AccountSummary findByAccountId(Long accountId);
+    AccountSummary findByAccountId(String accountId);
 
-    record AccountSummary(Long accountId, Long customerId, String currencyCode, String status) {}
+    record AccountSummary(String accountId, String customerId, String currencyCode, String status) {}
 }

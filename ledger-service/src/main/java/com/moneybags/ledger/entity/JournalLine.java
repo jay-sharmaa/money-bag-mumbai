@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "journal_lines")
+@Table(name = "ledger_journal_lines")
 @Getter
 @NoArgsConstructor
 public class JournalLine {
@@ -31,8 +31,8 @@ public class JournalLine {
     @Column(name = "ledger_code", nullable = false, length = 32)
     private String ledgerCode;
 
-    @Column(name = "customer_account_id")
-    private Long customerAccountId;
+    @Column(name = "customer_account_id", length = 64)
+    private String customerAccountId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
@@ -48,7 +48,7 @@ public class JournalLine {
     private Instant createdAt;
 
     public static JournalLine of(JournalEntry journal, int lineNumber, LedgerAccount account,
-                                 Long customerAccountId, EntrySide side, BigDecimal amount,
+                                 String customerAccountId, EntrySide side, BigDecimal amount,
                                  String description) {
         JournalLine line = new JournalLine();
         line.journalEntry = journal;

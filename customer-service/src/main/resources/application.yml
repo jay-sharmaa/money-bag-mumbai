@@ -1,19 +1,27 @@
 server:
   port: 8082
 spring:
-  profiles:
-    default: demo
+  config:
+    import: optional:file:./.env[.properties],optional:file:../.env[.properties]
   application:
     name: customer-service
   datasource:
-    url: ${CUSTOMER_DB_URL:jdbc:mysql://localhost:3306/mydb}
-    username: ${CUSTOMER_DB_USERNAME:root}
-    password: ${CUSTOMER_DB_PASSWORD:password}
+    url: ${DBURL}
+    username: ${DBUSER}
+    password: ${DBPASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.OracleDialect
     open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    table: flyway_customer_history
+    baseline-on-migrate: true
+    baseline-version: 0
 eureka:
   client:
     service-url:

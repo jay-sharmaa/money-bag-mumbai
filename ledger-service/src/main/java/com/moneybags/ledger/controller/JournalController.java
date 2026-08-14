@@ -32,7 +32,7 @@ public class JournalController {
                               "journalReference": "JE-503-PAYER",
                               "transactionId": 503,
                               "description": "Payer side of internal transfer",
-                              "currencyCode": "USD",
+                              "currencyCode": "INR",
                               "lines": [
                                 {"ledgerCode":"210000","customerAccountId":10001,"side":"DEBIT","amount":252.00,"description":"Reduce customer deposit liability"},
                                 {"ledgerCode":"220100","side":"CREDIT","amount":250.00,"description":"Move principal into internal clearing"},
@@ -74,8 +74,8 @@ public class JournalController {
     @Operation(summary = "Query journal history",
             description = "Filter by transactionId or customerAccountId. With no filter, returns all journals newest first.")
     public List<JournalResponse> search(
-            @RequestParam(required = false) Long transactionId,
-            @RequestParam(required = false) Long customerAccountId
+            @RequestParam(required = false) String transactionId,
+            @RequestParam(required = false) String customerAccountId
     ) {
         return queryService.search(transactionId, customerAccountId);
     }
@@ -83,7 +83,7 @@ public class JournalController {
     @GetMapping("/customer-accounts/{accountId}/entries")
     @Operation(summary = "Get journal-line audit history for a customer account",
             description = "This is an accounting association only; it is not the customer's live or available balance.")
-    public List<CustomerLedgerEntryResponse> customerEntries(@PathVariable Long accountId) {
+    public List<CustomerLedgerEntryResponse> customerEntries(@PathVariable String accountId) {
         return queryService.customerEntries(accountId);
     }
 }

@@ -23,9 +23,9 @@ class LedgerApiIntegrationTest {
 
     @BeforeEach
     void resetLedger() {
-        jdbc.update("DELETE FROM journal_lines");
-        jdbc.update("DELETE FROM journal_entries");
-        jdbc.update("UPDATE ledger_accounts SET balance = 0, version = 0, active = TRUE");
+        jdbc.update("DELETE FROM ledger_journal_lines");
+        jdbc.update("DELETE FROM ledger_journal_entries");
+        jdbc.update("UPDATE ledger_accounts SET balance = 0, version = 0, active = 1");
     }
 
     @Test
@@ -33,11 +33,11 @@ class LedgerApiIntegrationTest {
         String body = """
                 {
                   "journalReference":"API-DEPOSIT-1",
-                  "transactionId":701,
-                  "currencyCode":"USD",
+                  "transactionId":"TX-701",
+                  "currencyCode":"INR",
                   "lines":[
                     {"ledgerCode":"110100","side":"DEBIT","amount":500.00},
-                    {"ledgerCode":"210000","customerAccountId":10001,"side":"CREDIT","amount":500.00}
+                    {"ledgerCode":"210000","customerAccountId":"10001","side":"CREDIT","amount":500.00}
                   ]
                 }
                 """;

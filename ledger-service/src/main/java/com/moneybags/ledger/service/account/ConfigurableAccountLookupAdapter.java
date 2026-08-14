@@ -11,7 +11,7 @@ public class ConfigurableAccountLookupAdapter implements AccountLookupPort {
     private final LedgerProperties properties;
 
     @Override
-    public AccountSummary findByAccountId(Long accountId) {
+    public AccountSummary findByAccountId(String accountId) {
         if (!properties.fakeAccounts().enabled()) {
             throw new AccountLookupException("Account Service integration is not configured");
         }

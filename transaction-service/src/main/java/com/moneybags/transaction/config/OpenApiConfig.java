@@ -2,6 +2,7 @@ package com.moneybags.transaction.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -17,6 +18,8 @@ public class OpenApiConfig {
                 .title("MoneyBags Transaction Service API")
                 .description("Employee-operated APIs for deposits, withdrawals, transfers, transaction queries, approvals, reversals, and reconciliation. Use Authorize to provide the employee ID, branch code, and comma-separated permissions.")
                 .version("v1"))
+                .addServersItem(new Server().url("http://localhost:8090").description("API Gateway"))
+                .addServersItem(new Server().url("http://localhost:8084").description("Transaction Service directly"))
                 .components(new Components()
                         .addSecuritySchemes("employeeId", header("X-Employee-Id", "Authenticated bank employee ID"))
                         .addSecuritySchemes("branchCode", header("X-Branch-Code", "Employee branch code"))

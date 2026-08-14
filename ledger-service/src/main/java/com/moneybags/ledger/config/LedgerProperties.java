@@ -12,7 +12,7 @@ public record LedgerProperties(
         FakeAccounts fakeAccounts
 ) {
     public LedgerProperties {
-        defaultCurrency = defaultCurrency == null ? "USD" : defaultCurrency.toUpperCase();
+        defaultCurrency = defaultCurrency == null ? "INR" : defaultCurrency.toUpperCase();
         accounts = accounts == null ? new Accounts("110100", "210000", "220100", "220200", "410100") : accounts;
         fakeAccounts = fakeAccounts == null ? new FakeAccounts(true, new LinkedHashMap<>()) : fakeAccounts;
     }
@@ -25,11 +25,11 @@ public record LedgerProperties(
             String feeIncome
     ) {}
 
-    public record FakeAccounts(boolean enabled, Map<Long, FakeAccount> accounts) {
+    public record FakeAccounts(boolean enabled, Map<String, FakeAccount> accounts) {
         public FakeAccounts {
             accounts = accounts == null ? new LinkedHashMap<>() : accounts;
         }
     }
 
-    public record FakeAccount(Long customerId, String currencyCode, String status) {}
+    public record FakeAccount(String customerId, String currencyCode, String status) {}
 }

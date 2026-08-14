@@ -62,12 +62,12 @@ Flyway creates and seeds these definitions. Their symbolic codes are also expose
 
 ## Run locally
 
-Requirements: Java 17+, Maven, and MySQL. The default JDBC URL creates the `moneybags_ledger` database when the configured MySQL user has permission. Override these values when needed:
+Requirements: Java 17+, Maven, and a local Oracle Database Free/XE instance. Create the service schemas with the repository's `oracle-local-setup.sql`, then override these values when needed:
 
 ```text
-LEDGER_DB_URL=jdbc:mysql://localhost:3306/moneybags_ledger?createDatabaseIfNotExist=true&serverTimezone=UTC
-LEDGER_DB_USERNAME=root
-LEDGER_DB_PASSWORD=password
+LEDGER_DB_URL=jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+LEDGER_DB_USERNAME=MONEYBAGS_LEDGER
+LEDGER_DB_PASSWORD=moneybags
 ```
 
 Run only this service:
@@ -101,7 +101,7 @@ Content-Type: application/json
   "transactionId": 501,
   "journalType": "DEPOSIT",
   "description": "Customer cash deposit",
-  "currencyCode": "USD",
+  "currencyCode": "INR",
   "createdBy": "transaction-service",
   "lines": [
     {
@@ -153,7 +153,7 @@ GET /api/v1/ledger/customer-accounts/{accountId}/entries
 
 ## Tests
 
-Tests use H2 in MySQL compatibility mode and run the same Flyway migrations:
+Tests use H2 in Oracle compatibility mode and run the same Flyway migrations:
 
 ```powershell
 mvn test

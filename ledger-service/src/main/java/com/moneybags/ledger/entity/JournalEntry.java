@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Entity
-@Table(name = "journal_entries")
+@Table(name = "ledger_journal_entries")
 @Getter
 @NoArgsConstructor
 public class JournalEntry {
@@ -24,8 +24,8 @@ public class JournalEntry {
     @Column(name = "journal_reference", nullable = false, unique = true, length = 100)
     private String journalReference;
 
-    @Column(name = "transaction_id")
-    private Long transactionId;
+    @Column(name = "transaction_id", length = 64)
+    private String transactionId;
 
     @Column(name = "journal_type", nullable = false, length = 40)
     private String journalType;
@@ -67,7 +67,7 @@ public class JournalEntry {
     @Getter(AccessLevel.NONE)
     private List<JournalLine> lines = new ArrayList<>();
 
-    public static JournalEntry posted(String reference, Long transactionId, String journalType,
+    public static JournalEntry posted(String reference, String transactionId, String journalType,
                                       String description, String currencyCode, BigDecimal totalDebit,
                                       BigDecimal totalCredit, Long reversalOfJournalId, String createdBy) {
         JournalEntry entry = new JournalEntry();

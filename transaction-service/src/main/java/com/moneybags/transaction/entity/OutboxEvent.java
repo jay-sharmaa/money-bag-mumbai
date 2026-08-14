@@ -14,7 +14,7 @@ public class OutboxEvent {
     @Column(name = "aggregate_id", nullable = false, length = 36) private String aggregateId;
     @Column(name = "event_type", nullable = false, length = 64) private String eventType;
     @Column(name = "deduplication_key", nullable = false, unique = true, length = 160) private String deduplicationKey;
-    @Column(nullable = false, columnDefinition = "text") private String payload;
+    @Lob @Column(nullable = false) private String payload;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private OutboxStatus status;
     @Column(nullable = false) private int attempts;
     @Column(name = "next_attempt_at") private Instant nextAttemptAt;

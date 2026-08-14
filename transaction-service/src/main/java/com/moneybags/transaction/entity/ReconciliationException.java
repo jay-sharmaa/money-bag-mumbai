@@ -16,7 +16,7 @@ public class ReconciliationException {
     @JsonIgnore @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "transaction_id") private Transaction transaction;
     @Column(name = "business_reference", length = 128) private String businessReference;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private ReconciliationStatus status;
-    @Column(nullable = false, columnDefinition = "text") private String evidence;
+    @Lob @Column(nullable = false) private String evidence;
     @Column(name = "assigned_to", length = 64) private String assignedTo;
     @Column(length = 1000) private String resolution;
     @Column(name = "detected_at", nullable = false) private Instant detectedAt;

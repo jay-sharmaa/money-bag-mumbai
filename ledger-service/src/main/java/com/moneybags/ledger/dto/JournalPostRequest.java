@@ -7,7 +7,7 @@ import java.util.List;
 
 public record JournalPostRequest(
         @Size(max = 100) String journalReference,
-        @Positive Long transactionId,
+        @Size(max = 64) String transactionId,
         @Size(max = 40) String journalType,
         @Size(max = 500) String description,
         @NotBlank @Pattern(regexp = "[A-Za-z]{3}") String currencyCode,

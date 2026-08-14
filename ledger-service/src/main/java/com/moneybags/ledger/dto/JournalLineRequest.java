@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 public record JournalLineRequest(
         @NotBlank @Size(max = 32) String ledgerCode,
-        @Positive Long customerAccountId,
+        @Size(max = 64) String customerAccountId,
         @NotNull EntrySide side,
         @NotNull @DecimalMin(value = "0.0001") @Digits(integer = 15, fraction = 4) BigDecimal amount,
         @Size(max = 500) String description

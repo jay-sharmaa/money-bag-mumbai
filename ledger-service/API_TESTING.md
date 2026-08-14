@@ -41,7 +41,7 @@ Content-Type: application/json
   "transactionId": 1001,
   "journalType": "DEPOSIT",
   "description": "Deposit 500 into account 10001",
-  "currencyCode": "USD",
+  "currencyCode": "INR",
   "createdBy": "swagger-test",
   "lines": [
     {
@@ -71,7 +71,7 @@ Save the returned `id`; it is the journal ID used by the ID and reversal endpoin
   "transactionId": 1002,
   "journalType": "WITHDRAWAL",
   "description": "Withdraw 40 and charge a 1 fee",
-  "currencyCode": "USD",
+  "currencyCode": "INR",
   "createdBy": "swagger-test",
   "lines": [
     {
@@ -102,7 +102,7 @@ Save the returned `id`; it is the journal ID used by the ID and reversal endpoin
   "transactionId": 1003,
   "journalType": "TRANSFER_PAYER",
   "description": "Transfer 250 from account 10001 with a 2 fee",
-  "currencyCode": "USD",
+  "currencyCode": "INR",
   "createdBy": "swagger-test",
   "lines": [
     {
@@ -133,7 +133,7 @@ Save the returned `id`; it is the journal ID used by the ID and reversal endpoin
   "transactionId": 1003,
   "journalType": "TRANSFER_SETTLEMENT",
   "description": "Settle 250 to account 20001",
-  "currencyCode": "USD",
+  "currencyCode": "INR",
   "createdBy": "swagger-test",
   "lines": [
     {
@@ -161,7 +161,7 @@ After steps 6 and 7, `GET /api/v1/ledger/accounts/220100/balance` should show th
   "transactionId": 1004,
   "journalType": "EXTERNAL_TRANSFER",
   "description": "Move 75 into external clearing",
-  "currencyCode": "USD",
+  "currencyCode": "INR",
   "createdBy": "swagger-test",
   "lines": [
     {
@@ -216,7 +216,7 @@ The customer-account entries endpoint is an audit association. It does not repre
 ```json
 {
   "journalReference": "DEMO-INVALID-UNBALANCED",
-  "currencyCode": "USD",
+  "currencyCode": "INR",
   "lines": [
     {"ledgerCode": "110100", "side": "DEBIT", "amount": 100.00},
     {"ledgerCode": "210000", "side": "CREDIT", "amount": 90.00}

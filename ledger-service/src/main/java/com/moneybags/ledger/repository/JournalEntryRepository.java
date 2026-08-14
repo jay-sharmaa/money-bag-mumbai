@@ -26,12 +26,12 @@ public interface JournalEntryRepository extends JpaRepository<JournalEntry, Long
     Optional<JournalEntry> lockById(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"lines", "lines.ledgerAccount"})
-    List<JournalEntry> findByTransactionIdOrderByCreatedAtDesc(Long transactionId);
+    List<JournalEntry> findByTransactionIdOrderByCreatedAtDesc(String transactionId);
 
     @EntityGraph(attributePaths = {"lines", "lines.ledgerAccount"})
     List<JournalEntry> findAllByOrderByCreatedAtDesc();
 
     @EntityGraph(attributePaths = {"lines", "lines.ledgerAccount"})
     @Query("select distinct j from JournalEntry j join j.lines l where l.customerAccountId = :accountId order by j.createdAt desc")
-    List<JournalEntry> findByCustomerAccountId(@Param("accountId") Long accountId);
+    List<JournalEntry> findByCustomerAccountId(@Param("accountId") String accountId);
 }

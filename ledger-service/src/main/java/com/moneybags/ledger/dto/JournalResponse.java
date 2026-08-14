@@ -9,7 +9,7 @@ import java.util.List;
 public record JournalResponse(
         Long id,
         String journalReference,
-        Long transactionId,
+        String transactionId,
         String journalType,
         String description,
         JournalStatus status,
