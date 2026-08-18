@@ -22,6 +22,12 @@ public record OwnedProductView(
         String status,
         String purchaseTransactionId,
         String reversalTransactionId,
+        String settlementStatus,
+        String settlementType,
+        String settlementDestinationAccountId,
+        BigDecimal settlementInterestAmount,
+        String settlementTransactionId,
+        Instant settledAt,
         Instant createdAt,
         Instant updatedAt) {
 }

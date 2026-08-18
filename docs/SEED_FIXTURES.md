@@ -94,7 +94,8 @@ to **INR** to match the rest of the system.
 `210100` is the static **Term Deposit Control** liability used by the `FD-12M`
 product-purchase journal.
 
-`510100` is the static **Savings Interest Expense** account. Weekly savings payouts debit
+`510100` is the static **Savings Interest Expense** account. Savings interest accrues weekly,
+and each 52-week payout debits
 this account and credit `210000` (**Customer Deposit Control**) for the receiving account.
 
 ## Permissions

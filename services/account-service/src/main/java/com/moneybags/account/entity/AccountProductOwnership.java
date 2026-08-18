@@ -70,6 +70,26 @@ public class AccountProductOwnership {
     @Column(name = "reversal_transaction_id", unique = true, length = 36)
     private String reversalTransactionId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "settlement_status", nullable = false, length = 20)
+    private FdSettlementStatus settlementStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "settlement_type", length = 24)
+    private FdSettlementType settlementType;
+
+    @Column(name = "settlement_destination_account_id", length = 36)
+    private String settlementDestinationAccountId;
+
+    @Column(name = "settlement_interest_amount", precision = 19, scale = 4)
+    private BigDecimal settlementInterestAmount;
+
+    @Column(name = "settlement_transaction_id", unique = true, length = 36)
+    private String settlementTransactionId;
+
+    @Column(name = "settled_at")
+    private Instant settledAt;
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -85,6 +105,7 @@ public class AccountProductOwnership {
         Instant now = Instant.now();
         if (createdAt == null) createdAt = now;
         updatedAt = now;
+        if (settlementStatus == null) settlementStatus = FdSettlementStatus.NONE;
     }
 
     @PreUpdate

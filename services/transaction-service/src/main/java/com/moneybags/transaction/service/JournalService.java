@@ -39,9 +39,42 @@ public class JournalService {
             case INTEREST_PAYOUT -> save(tx,"INTEREST_PAYOUT",List.of(
                     dr(properties.getLedger().getSavingsInterestExpense(),null,tx.getAmount(),SAVINGS_INTEREST_EXPENSE),
                     cr(properties.getLedger().getAccountDepositControl(),tx.getDestinationAccountId(),tx.getAmount(),CUSTOMER_DEPOSIT_CONTROL)));
+            case FD_MATURITY_PAYOUT, FD_PREMATURE_BREAK ->
+                    throw new IllegalArgumentException("FD settlement facts require settlement details");
             case CHEQUE -> { }
             case REVERSAL -> throw new IllegalArgumentException("Reversal journals are created from the original transaction");
         }
+    }
+
+    public void createFdSettlementFacts(Transaction tx, FdSettlement settlement) {
+        BigDecimal total = settlement.getPrincipalAmount().add(settlement.getInterestAmount());
+        int destinationSequence = 1;
+        if (settlement.getSourceFdAccountId() != null) {
+            legs.save(leg(tx, 1, LegRole.SOURCE, Direction.DEBIT,
+                    settlement.getSourceFdAccountId(), settlement.getPrincipalAmount(),
+                    "FD principal released from term account"));
+            destinationSequence = 2;
+        }
+        legs.save(leg(tx, destinationSequence, LegRole.DESTINATION, Direction.CREDIT,
+                tx.getDestinationAccountId(), total,
+                settlement.getSettlementType() == FdSettlementType.MATURITY
+                        ? "FD maturity principal and interest" : "FD premature-break principal"));
+        List<Line> lines = new ArrayList<>();
+        if (settlement.getSourceFdAccountId() == null) {
+            lines.add(dr(properties.getLedger().getTermDepositControl(), null,
+                    settlement.getPrincipalAmount(), TERM_DEPOSIT_CONTROL));
+        } else {
+            lines.add(dr(properties.getLedger().getAccountDepositControl(),
+                    settlement.getSourceFdAccountId(), settlement.getPrincipalAmount(),
+                    CUSTOMER_DEPOSIT_CONTROL));
+        }
+        if (settlement.getInterestAmount().signum() > 0) {
+            lines.add(dr(properties.getLedger().getTermDepositInterestExpense(), null,
+                    settlement.getInterestAmount(), "Term Deposit Interest Expense"));
+        }
+        lines.add(cr(properties.getLedger().getAccountDepositControl(),
+                tx.getDestinationAccountId(), total, CUSTOMER_DEPOSIT_CONTROL));
+        save(tx, tx.getType().name(), lines);
     }
     public void createSettlementJournal(Transaction tx){
         if(tx.getType()==TransactionType.INTERNAL_TRANSFER){

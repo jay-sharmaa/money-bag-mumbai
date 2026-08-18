@@ -21,6 +21,11 @@ public interface TransactionClient {
                                               @RequestHeader("Idempotency-Key") String idempotencyKey,
                                               @RequestBody InterestPayoutCommand command);
 
+    @PostMapping("/internal/v1/transactions/fd-settlements")
+    FdSettlementResult createFdSettlement(@RequestHeader("X-Service-Name") String serviceName,
+                                          @RequestHeader("Idempotency-Key") String idempotencyKey,
+                                          @RequestBody FdSettlementCommand command);
+
     record OpeningDepositCommand(
             String accountId,
             BigDecimal amount,
@@ -35,7 +40,7 @@ public interface TransactionClient {
             String accountId,
             BigDecimal amount,
             String currency,
-            String accrualId,
+            String payoutBatchId,
             LocalDate periodStartDate,
             LocalDate periodEndDate,
             String branchCode,
@@ -43,5 +48,25 @@ public interface TransactionClient {
     }
 
     record InterestPayoutResult(String id, String reference, String status) {
+    }
+
+    record FdSettlementCommand(
+            String ownershipId,
+            String purchaseTransactionId,
+            String sourceFdAccountId,
+            String destinationAccountId,
+            BigDecimal principalAmount,
+            BigDecimal interestAmount,
+            BigDecimal interestRate,
+            String currency,
+            String settlementType,
+            LocalDate acquiredOn,
+            LocalDate maturityDate,
+            LocalDate settlementDate,
+            String branchCode,
+            String correlationId) {
+    }
+
+    record FdSettlementResult(String id, String reference, String status) {
     }
 }

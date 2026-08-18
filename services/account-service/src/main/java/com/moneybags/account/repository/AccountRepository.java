@@ -49,4 +49,7 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     long countByCifNoAndStatus(String cifNo, AccountStatus status);
 
     List<Account> findByStatusAndProductCodeIn(AccountStatus status, Collection<String> productCodes);
+
+    List<Account> findByCifNoAndStatusAndProductCodeIn(
+            String cifNo, AccountStatus status, Collection<String> productCodes);
 }

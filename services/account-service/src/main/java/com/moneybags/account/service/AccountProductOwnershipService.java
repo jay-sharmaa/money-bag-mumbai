@@ -27,6 +27,7 @@ public class AccountProductOwnershipService {
 
     private final AccountProductOwnershipRepository ownerships;
     private final AccountRepository accounts;
+    private final FdSettlementService fdSettlements;
 
     @Transactional(readOnly = true)
     public List<OwnedProductView> list(RequestActor actor, String accountId) {
@@ -35,6 +36,21 @@ public class AccountProductOwnershipService {
         actor.requireBranchAccess(account.getBranchCode());
         return ownerships.findByOwnerAccountIdOrderByAcquiredOnDescCreatedAtDesc(accountId)
                 .stream().map(this::view).toList();
+    }
+
+    @Transactional
+    public OwnedProductView breakFixedDeposit(RequestActor actor, String accountId,
+                                              String ownershipId) {
+        Account account = requireAccount(accountId);
+        actor.requireBranchAccess(account.getBranchCode());
+        AccountProductOwnership ownership = ownerships.findById(ownershipId)
+                .orElseThrow(() -> ApiException.notFound("OWNED_PRODUCT_NOT_FOUND",
+                        "No owned product exists with id " + ownershipId));
+        if (!ownership.getOwnerAccountId().equals(accountId)) {
+            throw ApiException.conflict("OWNERSHIP_ACCOUNT_MISMATCH",
+                    "The fixed deposit belongs to another account");
+        }
+        return view(fdSettlements.requestPrematureBreak(actor, ownershipId));
     }
 
     @Transactional
@@ -176,6 +192,11 @@ public class AccountProductOwnershipService {
                 ownership.getCurrency(), ownership.getInterestRate(), ownership.getTenureMonths(),
                 ownership.getAcquiredOn(), ownership.getMaturityDate(), ownership.getStatus().name(),
                 ownership.getPurchaseTransactionId(), ownership.getReversalTransactionId(),
+                ownership.getSettlementStatus().name(),
+                ownership.getSettlementType() == null ? null : ownership.getSettlementType().name(),
+                ownership.getSettlementDestinationAccountId(),
+                ownership.getSettlementInterestAmount(), ownership.getSettlementTransactionId(),
+                ownership.getSettledAt(),
                 ownership.getCreatedAt(), ownership.getUpdatedAt());
     }
 }

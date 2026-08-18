@@ -19,6 +19,7 @@ public class AccountProperties {
     private Outbox outbox = new Outbox();
     private Reconciliation reconciliation = new Reconciliation();
     private Interest interest = new Interest();
+    private FdSettlement fdSettlement = new FdSettlement();
 
     @Getter
     @Setter
@@ -48,5 +49,13 @@ public class AccountProperties {
         private int maxCatchUpRuns = 52;
         private int staleAfterMinutes = 30;
         private int retryDelayMinutes = 5;
+    }
+
+    @Getter
+    @Setter
+    public static class FdSettlement {
+        private boolean enabled = true;
+        private long checkDelayMs = 60000;
+        private long initialDelayMs = 15000;
     }
 }

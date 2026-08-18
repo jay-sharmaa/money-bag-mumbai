@@ -4,6 +4,7 @@ import com.moneybags.transaction.api.TransactionModels.*;
 import com.moneybags.transaction.api.ProductPurchaseRequest;
 import com.moneybags.transaction.api.ProductPurchaseResponse;
 import com.moneybags.transaction.api.InterestPayoutRequest;
+import com.moneybags.transaction.api.FdSettlementRequest;
 import com.moneybags.transaction.client.*;
 import com.moneybags.transaction.domain.*;
 import com.moneybags.transaction.domain.FinancialEnums.*;
@@ -31,6 +32,7 @@ public class TransactionOrchestrator {
     private final TransactionLegRepository legs;
     private final TransactionRailDetailsRepository railDetails;
     private final ProductPurchaseRepository productPurchases;
+    private final FdSettlementRepository fdSettlements;
     private final AccountClient accounts;
     private final CardClient cards;
     private final ProductClient products;
@@ -62,22 +64,199 @@ public class TransactionOrchestrator {
 
     @Transactional
     public Transaction createInterestPayout(InterestPayoutRequest request, String idempotencyKey) {
-        if (request.periodEndDate().isBefore(request.periodStartDate())
-                || !request.periodStartDate().plusDays(6).equals(request.periodEndDate())) {
+        long periodDays = java.time.temporal.ChronoUnit.DAYS.between(
+                request.periodStartDate(), request.periodEndDate()) + 1;
+        if (periodDays != 364) {
             throw DomainException.invalid("INVALID_INTEREST_PERIOD",
-                    "An interest payout must cover exactly seven consecutive days");
+                    "An interest payout must cover exactly 52 consecutive seven-day periods");
         }
         CreateRequest payout = new CreateRequest(
                 null, request.accountId(), null, request.amount(), BigDecimal.ZERO,
                 request.currency(), PaymentChannel.INTERNAL, PaymentMethod.ACCOUNT,
                 null, null,
                 "Savings interest for " + request.periodStartDate() + " to " + request.periodEndDate(),
-                "TXN-INT-" + request.accrualId());
+                "TXN-INT-" + request.payoutBatchId());
         RequestActor actor = new RequestActor("interest-engine", request.branchCode(),
                 Set.of("TRANSACTION_CREATE"), request.correlationId() == null
-                ? request.accrualId() : request.correlationId());
+                ? request.payoutBatchId() : request.correlationId());
         return create(TransactionType.INTEREST_PAYOUT, PaymentRail.INTERNAL, payout,
                 idempotencyKey, actor, false);
+    }
+
+    @Transactional
+    public Transaction createFdSettlement(FdSettlementRequest request, String idempotencyKey) {
+        validateFdSettlement(request);
+        AccountClient.AccountContext destination = activeAccount(
+                request.destinationAccountId(), request.currency());
+        AccountClient.AccountContext sourceFdAccount = null;
+        if (request.sourceFdAccountId() != null && !request.sourceFdAccountId().isBlank()) {
+            sourceFdAccount = activeAccount(request.sourceFdAccountId(), request.currency());
+            if (!sourceFdAccount.accountHolderId().equals(destination.accountHolderId())) {
+                throw DomainException.forbidden("FD_DESTINATION_OWNER_MISMATCH",
+                        "The FD and destination account must belong to the same customer");
+            }
+            if (sourceFdAccount.ledgerBalance().compareTo(request.principalAmount()) != 0) {
+                throw DomainException.conflict("FD_PRINCIPAL_BALANCE_MISMATCH",
+                        "The account-opened FD balance must equal its original principal");
+            }
+            if (sourceFdAccount.availableBalance().compareTo(request.principalAmount()) != 0) {
+                throw DomainException.conflict("FD_PRINCIPAL_UNAVAILABLE",
+                        "The complete FD principal must be available before settlement");
+            }
+        }
+        BigDecimal total = request.principalAmount().add(request.interestAmount());
+        TransactionType transactionType = request.settlementType() == FdSettlementType.MATURITY
+                ? TransactionType.FD_MATURITY_PAYOUT : TransactionType.FD_PREMATURE_BREAK;
+        var claim = idempotency.claim("fd-settlement-engine", "CREATE_" + transactionType,
+                idempotencyKey, hasher.hash(List.of(transactionType, request)));
+        if (claim.replay()) return claim.record().getTransaction();
+
+        ProductPurchase purchase = null;
+        if (request.purchaseTransactionId() != null && !request.purchaseTransactionId().isBlank()) {
+            purchase = productPurchases.findByTransaction_Id(request.purchaseTransactionId())
+                    .orElseThrow(() -> DomainException.notFound("FD_PURCHASE_NOT_FOUND",
+                            "No fixed-deposit purchase exists for transaction "
+                                    + request.purchaseTransactionId()));
+            validatePurchaseForSettlement(purchase, request);
+        }
+
+        Transaction tx = Transaction.builder()
+                .reference("TXN-FD-" + request.ownershipId().replace("-", "")
+                        .substring(0, Math.min(20, request.ownershipId().replace("-", "").length()))
+                        .toUpperCase())
+                .type(transactionType)
+                .rail(PaymentRail.INTERNAL)
+                .channel(PaymentChannel.INTERNAL)
+                .method(PaymentMethod.ACCOUNT)
+                .sourceAccountId(request.sourceFdAccountId())
+                .destinationAccountId(request.destinationAccountId())
+                .accountHolderId(destination.accountHolderId())
+                .amount(total)
+                .feeAmount(BigDecimal.ZERO)
+                .currency(request.currency())
+                .status(TransactionStatus.RECEIVED)
+                .makerEmployeeId("fd-settlement-engine")
+                .branchCode(request.branchCode())
+                .narration(request.settlementType() == FdSettlementType.MATURITY
+                        ? "Fixed deposit maturity: principal and interest"
+                        : "Premature fixed deposit break: full principal return")
+                .approvalRequired(false)
+                .correlationId(request.correlationId())
+                .build();
+        transactions.saveAndFlush(tx);
+
+        FdSettlement settlement = fdSettlements.save(FdSettlement.builder()
+                .transaction(tx)
+                .ownershipId(request.ownershipId())
+                .purchaseTransactionId(request.purchaseTransactionId())
+                .sourceFdAccountId(request.sourceFdAccountId())
+                .destinationAccountId(request.destinationAccountId())
+                .principalAmount(request.principalAmount())
+                .interestAmount(request.interestAmount())
+                .interestRate(request.interestRate())
+                .settlementType(request.settlementType())
+                .acquiredOn(request.acquiredOn())
+                .maturityDate(request.maturityDate())
+                .settlementDate(request.settlementDate())
+                .build());
+        if (purchase != null) {
+            purchase.setSettlementType(request.settlementType().name());
+            purchase.setSettlementTransactionId(tx.getId());
+        }
+
+        states.initial(tx, "fd-settlement-engine", "SYSTEM", "FD settlement accepted");
+        states.transition(tx, TransactionStatus.VALIDATED, "fd-settlement-engine", "SYSTEM",
+                "FD ownership, dates, destination, and settlement amounts validated");
+        try {
+            String sourceHoldId = null;
+            if (sourceFdAccount != null) {
+                reserve(tx, request.sourceFdAccountId(), request.principalAmount());
+                sourceHoldId = holds.findByTransactionId(tx.getId()).orElseThrow().getExternalHoldId();
+            }
+            states.transition(tx, TransactionStatus.PROCESSING, "fd-settlement-engine", "SYSTEM",
+                    "FD settlement financial facts created");
+            journals.createFdSettlementFacts(tx, settlement);
+            if (sourceFdAccount != null) {
+                outbox.accountProjection(tx, request.sourceFdAccountId(), "DEBIT",
+                        request.principalAmount(), "FD_PRINCIPAL_RELEASED",
+                        sourceHoldId, "fd-principal-debit");
+            }
+            outbox.accountProjection(tx, request.destinationAccountId(), "CREDIT", total,
+                    transactionType == TransactionType.FD_MATURITY_PAYOUT
+                            ? "FD_MATURITY_PAYOUT_POSTED" : "FD_PREMATURE_BREAK_POSTED",
+                    null, "fd-settlement-credit");
+            states.transition(tx, TransactionStatus.PROJECTION_PENDING,
+                    "fd-settlement-engine", "SYSTEM", "FD settlement projections queued");
+        } catch (RuntimeException failure) {
+            releaseAfterOrchestrationFailure(tx, failure);
+            throw failure;
+        }
+        idempotency.complete(claim.record(), tx, 201);
+        return tx;
+    }
+
+    private void validateFdSettlement(FdSettlementRequest request) {
+        boolean purchasedFd = request.purchaseTransactionId() != null
+                && !request.purchaseTransactionId().isBlank();
+        boolean accountOpenedFd = request.sourceFdAccountId() != null
+                && !request.sourceFdAccountId().isBlank();
+        if (purchasedFd == accountOpenedFd) {
+            throw DomainException.invalid("INVALID_FD_FUNDING_SOURCE",
+                    "Settlement must identify either the FD purchase or its FD account");
+        }
+        if (accountOpenedFd && request.sourceFdAccountId().equals(request.destinationAccountId())) {
+            throw DomainException.invalid("FD_DESTINATION_SAME_AS_SOURCE",
+                    "An FD must settle to a separate savings or current account");
+        }
+        if (!request.acquiredOn().isBefore(request.maturityDate())) {
+            throw DomainException.invalid("INVALID_FD_DATES",
+                    "FD acquisition date must be before maturity date");
+        }
+        if (request.settlementType() == FdSettlementType.PREMATURE_BREAK) {
+            if (!request.settlementDate().isBefore(request.maturityDate())) {
+                throw DomainException.invalid("FD_NOT_PREMATURE",
+                        "A premature break must occur before maturity");
+            }
+            if (request.interestAmount().signum() != 0) {
+                throw DomainException.invalid("PREMATURE_FD_INTEREST_NOT_ALLOWED",
+                        "A premature FD break returns principal only");
+            }
+            return;
+        }
+        if (!request.settlementDate().equals(request.maturityDate())) {
+            throw DomainException.invalid("INVALID_FD_MATURITY_DATE",
+                    "Maturity interest must be calculated through the maturity date");
+        }
+        long days = java.time.temporal.ChronoUnit.DAYS.between(
+                request.acquiredOn(), request.maturityDate());
+        BigDecimal expectedInterest = request.principalAmount()
+                .multiply(request.interestRate())
+                .multiply(BigDecimal.valueOf(days))
+                .divide(BigDecimal.valueOf(36500), 2, java.math.RoundingMode.HALF_EVEN);
+        if (expectedInterest.compareTo(request.interestAmount()) != 0) {
+            throw DomainException.invalid("FD_INTEREST_MISMATCH",
+                    "Maturity interest does not match principal, rate, and actual days");
+        }
+    }
+
+    private void validatePurchaseForSettlement(ProductPurchase purchase,
+                                                FdSettlementRequest request) {
+        if (purchase.getStatus() != ProductPurchaseStatus.ACTIVE) {
+            throw DomainException.conflict("FD_PURCHASE_NOT_ACTIVE",
+                    "Only an active fixed-deposit purchase can settle");
+        }
+        if (purchase.getSettlementTransactionId() != null) {
+            throw DomainException.conflict("FD_ALREADY_SETTLED",
+                    "The fixed-deposit purchase already has a settlement transaction");
+        }
+        if (purchase.getPrincipalAmount().compareTo(request.principalAmount()) != 0
+                || !purchase.getCurrency().equals(request.currency())
+                || purchase.getInterestRate().compareTo(request.interestRate()) != 0
+                || !purchase.getPurchasedOn().equals(request.acquiredOn())
+                || !purchase.getMaturityDate().equals(request.maturityDate())) {
+            throw DomainException.conflict("FD_SETTLEMENT_TERMS_MISMATCH",
+                    "Settlement terms do not match the original fixed-deposit purchase");
+        }
     }
 
     @Transactional
@@ -278,6 +457,10 @@ public class TransactionOrchestrator {
             throw DomainException.conflict("TRANSACTION_NOT_REVERSIBLE", "Only a completed transaction can be reversed");
         if (original.getType() == TransactionType.REVERSAL)
             throw DomainException.conflict("TRANSACTION_NOT_REVERSIBLE", "A reversal cannot itself be reversed");
+        if (original.getType() == TransactionType.FD_MATURITY_PAYOUT
+                || original.getType() == TransactionType.FD_PREMATURE_BREAK)
+            throw DomainException.conflict("TRANSACTION_NOT_REVERSIBLE",
+                    "An FD settlement cannot be reversed through the generic reversal flow");
         if (original.getType() == TransactionType.PRODUCT_PURCHASE) {
             ProductPurchase purchase = productPurchases.findByTransaction_Id(original.getId())
                     .orElseThrow(() -> DomainException.conflict("PRODUCT_PURCHASE_NOT_FOUND",
@@ -424,6 +607,7 @@ public class TransactionOrchestrator {
             case CARD_PAYMENT -> PaymentRail.CARD;
             case PRODUCT_PURCHASE -> PaymentRail.INTERNAL;
             case INTEREST_PAYOUT -> PaymentRail.INTERNAL;
+            case FD_MATURITY_PAYOUT, FD_PREMATURE_BREAK -> PaymentRail.INTERNAL;
             case REVERSAL -> PaymentRail.INTERNAL;
         };
         if (rail != expected)

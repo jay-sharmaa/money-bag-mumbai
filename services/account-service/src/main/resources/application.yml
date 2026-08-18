@@ -35,12 +35,16 @@ moneybags:
       enabled: true
       check-delay-ms: 60000
       initial-delay-ms: 10000
-      first-period-end: 2026-08-16
+      first-period-end: 2026-08-23
       run-hour-utc: 0
       run-minute-utc: 10
       max-catch-up-runs: 52
       stale-after-minutes: 30
       retry-delay-minutes: 5
+    fd-settlement:
+      enabled: true
+      check-delay-ms: 60000
+      initial-delay-ms: 15000
 
 eureka:
   client:

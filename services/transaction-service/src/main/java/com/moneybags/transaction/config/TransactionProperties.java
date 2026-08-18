@@ -24,6 +24,7 @@ public class TransactionProperties {
         private String externalClearing = "220200";
         private String feeIncome = "410100";
         private String savingsInterestExpense = "510100";
+        private String termDepositInterestExpense = "510200";
     }
 
     @Getter @Setter

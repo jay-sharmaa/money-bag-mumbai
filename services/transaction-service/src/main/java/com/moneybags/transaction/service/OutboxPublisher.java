@@ -23,6 +23,7 @@ public class OutboxPublisher {
     private final OutboxEventRepository events; private final TransactionRepository transactions; private final FundsHoldRepository holds;
     private final ClearingInstructionRepository clearing; private final AccountClient accounts; private final LedgerClient ledger; private final StatementClient statements;
     private final ProductPurchaseRepository productPurchases;
+    private final FdSettlementRepository fdSettlements;
     private final ObjectMapper mapper; private final TransactionProperties properties; private final TransactionStateMachine states; private final OutboxService outbox;
 
     @Scheduled(fixedDelayString="${moneybags.transaction.outbox.fixed-delay-ms:5000}")
@@ -103,6 +104,9 @@ public class OutboxPublisher {
 
     private StatementAmounts statementAmounts(Transaction tx,LedgerClient.JournalLineResponse line){
         if(tx.getType()==TransactionType.REVERSAL)return new StatementAmounts(line.amount(),BigDecimal.ZERO);
+        if(tx.getType()==TransactionType.FD_MATURITY_PAYOUT
+                ||tx.getType()==TransactionType.FD_PREMATURE_BREAK)
+            return new StatementAmounts(line.amount(),BigDecimal.ZERO);
         if("DEBIT".equals(line.side())&&line.customerAccountId().equals(tx.getSourceAccountId()))
             return new StatementAmounts(tx.getAmount(),tx.getFeeAmount());
         return new StatementAmounts(line.amount(),BigDecimal.ZERO);
@@ -121,6 +125,15 @@ public class OutboxPublisher {
         }
         else if(states.canTransition(tx.getStatus(),TransactionStatus.COMPLETED)){
             states.transition(tx,TransactionStatus.COMPLETED,"outbox-publisher","SYSTEM","Account, ledger, and statement projections completed");
+            if(tx.getType()==TransactionType.FD_MATURITY_PAYOUT
+                    ||tx.getType()==TransactionType.FD_PREMATURE_BREAK){
+                fdSettlements.findByTransaction_Id(tx.getId()).ifPresent(settlement->{
+                    if(settlement.getPurchaseTransactionId()!=null){
+                        productPurchases.findByTransaction_Id(settlement.getPurchaseTransactionId())
+                                .ifPresent(purchase->purchase.setSettledAt(Instant.now()));
+                    }
+                });
+            }
             if(tx.getType()==TransactionType.REVERSAL&&tx.getReversalOf()!=null&&tx.getReversalOf().getStatus()==TransactionStatus.REVERSAL_PENDING)states.transition(tx.getReversalOf(),TransactionStatus.REVERSED,"outbox-publisher","SYSTEM","Compensating transaction completed");
         }
     }

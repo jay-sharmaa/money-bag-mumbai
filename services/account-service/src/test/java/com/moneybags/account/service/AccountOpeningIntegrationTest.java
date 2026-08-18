@@ -45,6 +45,7 @@ class AccountOpeningIntegrationTest {
 
     @MockBean ProductClient productClient;
     @MockBean CustomerClient customerClient;
+    @MockBean FdSettlementService fdSettlementService;
 
     @Test
     void approvalProjectsANonNullTimestampAndQueuesTheRequestedOpeningDeposit() throws Exception {

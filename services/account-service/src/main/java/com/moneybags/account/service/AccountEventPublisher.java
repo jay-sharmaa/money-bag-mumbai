@@ -5,10 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moneybags.account.api.InternalModels.AccountEvent;
 import com.moneybags.account.client.TransactionClient.OpeningDepositCommand;
 import com.moneybags.account.client.TransactionClient.InterestPayoutCommand;
+import com.moneybags.account.client.TransactionClient.FdSettlementCommand;
 import com.moneybags.account.entity.Account;
 import com.moneybags.account.entity.AccountApplication;
 import com.moneybags.account.entity.AccountOutbox;
-import com.moneybags.account.entity.InterestAccrual;
+import com.moneybags.account.entity.InterestPayoutBatch;
+import com.moneybags.account.entity.AccountProductOwnership;
+import com.moneybags.account.entity.FdSettlementType;
+import com.moneybags.account.entity.ProductAcquisitionType;
 import com.moneybags.account.entity.OutboxStatus;
 import com.moneybags.account.repository.AccountOutboxRepository;
 import com.moneybags.account.security.RequestActor;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -55,14 +60,30 @@ public class AccountEventPublisher {
                 "OPENING_DEPOSIT_REQUESTED", DESTINATION_TRANSACTION, command, true);
     }
 
-    public void enqueueInterestPayout(Account account, InterestAccrual accrual,
-                                      LocalDate periodStartDate, String correlationId) {
+    public void enqueueInterestPayout(Account account, InterestPayoutBatch batch,
+                                      String correlationId) {
         InterestPayoutCommand command = new InterestPayoutCommand(
-                account.getAccountId(), accrual.getAccruedAmount(), account.getCurrency(),
-                accrual.getAccrualId(), periodStartDate, accrual.getAccrualDate(),
+                account.getAccountId(), batch.getPayoutAmount(), account.getCurrency(),
+                batch.getBatchId(), batch.getPeriodStartDate(), batch.getPeriodEndDate(),
                 account.getBranchCode(), correlationId);
         save(UUID.randomUUID().toString(), account.getAccountId(),
                 "INTEREST_PAYOUT_REQUESTED", DESTINATION_TRANSACTION, command, true);
+    }
+
+    public void enqueueFdSettlement(AccountProductOwnership ownership, Account destination,
+                                    BigDecimal interestAmount, FdSettlementType settlementType,
+                                    LocalDate settlementDate, String correlationId) {
+        FdSettlementCommand command = new FdSettlementCommand(
+                ownership.getOwnershipId(), ownership.getPurchaseTransactionId(),
+                ownership.getAcquisitionType() == ProductAcquisitionType.ACCOUNT_OPENING
+                        ? ownership.getOwnerAccountId() : null,
+                destination.getAccountId(), ownership.getPrincipalAmount(), interestAmount,
+                ownership.getInterestRate(), ownership.getCurrency(), settlementType.name(),
+                ownership.getAcquiredOn(),
+                ownership.getMaturityDate(), settlementDate, destination.getBranchCode(),
+                correlationId);
+        save(UUID.randomUUID().toString(), ownership.getOwnershipId(),
+                "FD_SETTLEMENT_REQUESTED", DESTINATION_TRANSACTION, command, true);
     }
 
     private void enqueue(Account account, String eventType, String destination) {

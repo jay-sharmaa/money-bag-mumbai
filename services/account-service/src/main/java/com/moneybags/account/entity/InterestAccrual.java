@@ -44,6 +44,9 @@ public class InterestAccrual {
     @Column(name = "posted_transaction_id", length = 36)
     private String postedTransactionId;
 
+    @Column(name = "payout_batch_id", length = 36)
+    private String payoutBatchId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 }

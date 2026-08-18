@@ -48,6 +48,8 @@ public class LedgerPostingCatalog {
         if (transaction.getType() == TransactionType.WITHDRAWAL) return "WITHDRAWAL";
         if (transaction.getType() == TransactionType.PRODUCT_PURCHASE) return "PRODUCT_PURCHASE";
         if (transaction.getType() == TransactionType.INTEREST_PAYOUT) return "INTEREST_PAYOUT";
+        if (transaction.getType() == TransactionType.FD_MATURITY_PAYOUT) return "FD_MATURITY_PAYOUT";
+        if (transaction.getType() == TransactionType.FD_PREMATURE_BREAK) return "FD_PREMATURE_BREAK";
         return "PAYMENT";
     }
 
@@ -57,6 +59,8 @@ public class LedgerPostingCatalog {
             case "WITHDRAWAL" -> "Customer withdrawal journal";
             case "PRODUCT_PURCHASE" -> "Term deposit purchase journal";
             case "INTEREST_PAYOUT" -> "Savings interest payout journal";
+            case "FD_MATURITY_PAYOUT" -> "Fixed deposit maturity journal";
+            case "FD_PREMATURE_BREAK" -> "Premature fixed deposit break journal";
             case "PAYMENT" -> "Customer payment journal";
             case "SETTLEMENT" -> "Payment settlement journal";
             case "REVERSAL" -> "Transaction reversal journal";

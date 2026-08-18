@@ -4,35 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3ed1cd6b-f7be-4008-9942-5ef42f39a0a8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/SEED_FIXTURES.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/SEED_FIXTURES.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/client/TransactionClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/client/TransactionClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/config/AccountProperties.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/config/AccountProperties.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/AccountRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/AccountRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/BalanceHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/BalanceHistoryRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/InterestAccrualRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/InterestAccrualRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountEventPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountEventPublisher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountOutboxPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountOutboxPublisher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountOpenApiIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountOpenApiIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountProductOwnershipMigrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountProductOwnershipMigrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/account-service/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/test/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/config/OpenApiConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/config/OpenApiConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/test/java/com/moneybags/customer/CustomerServiceIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/customer-service/src/test/java/com/moneybags/customer/CustomerServiceIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/ledger-service/src/test/java/com/moneybags/ledger/LedgerServiceIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/ledger-service/src/test/java/com/moneybags/ledger/LedgerServiceIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryMigrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryMigrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/statement-reporting-service/src/test/java/com/moneybags/statement/StatementReportingIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/statement-reporting-service/src/test/java/com/moneybags/statement/StatementReportingIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/config/TransactionProperties.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/config/TransactionProperties.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/controller/InternalTransactionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/controller/InternalTransactionController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/domain/TransactionType.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/domain/TransactionType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/JournalService.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/JournalService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/LedgerPostingCatalog.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/LedgerPostingCatalog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/TransactionOrchestrator.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/TransactionOrchestrator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/test/java/com/moneybags/transaction/TransactionServiceIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/test/java/com/moneybags/transaction/TransactionServiceIntegrationTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="3ed1cd6b-f7be-4008-9942-5ef42f39a0a8" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -69,43 +41,43 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;Spring Boot.AccountServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.AuditServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.BranchEmployeeServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.ConfigurationServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.CustomerServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.EurekaServerApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.IdentityServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.LedgerServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.NotificationServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.ProductServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.StatementReportingApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.TransactionServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/moneybagsfinal&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.sync&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.AccountServiceApplication.executor": "Run",
+    "Spring Boot.ApiGatewayApplication.executor": "Run",
+    "Spring Boot.AuditServiceApplication.executor": "Run",
+    "Spring Boot.BranchEmployeeServiceApplication.executor": "Run",
+    "Spring Boot.ConfigurationServiceApplication.executor": "Run",
+    "Spring Boot.CustomerServiceApplication.executor": "Run",
+    "Spring Boot.EurekaServerApplication.executor": "Run",
+    "Spring Boot.IdentityServiceApplication.executor": "Run",
+    "Spring Boot.LedgerServiceApplication.executor": "Run",
+    "Spring Boot.NotificationServiceApplication.executor": "Run",
+    "Spring Boot.ProductServiceApplication.executor": "Run",
+    "Spring Boot.StatementReportingApplication.executor": "Run",
+    "Spring Boot.TransactionServiceApplication.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "accountservice",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/moneybagsfinal",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "settings.sync",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>
@@ -255,6 +227,7 @@
       <workItem from="1786940288841" duration="7186000" />
       <workItem from="1786956524013" duration="1289000" />
       <workItem from="1786974886463" duration="152000" />
+      <workItem from="1787025374829" duration="452000" />
     </task>
     <servers />
   </component>

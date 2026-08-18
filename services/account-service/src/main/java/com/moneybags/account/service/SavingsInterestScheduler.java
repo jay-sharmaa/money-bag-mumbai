@@ -37,7 +37,7 @@ public class SavingsInterestScheduler {
                 interest.run(run.getPeriodEndDate(),
                         "weekly-interest:" + run.getPeriodEndDate());
             } catch (RuntimeException failure) {
-                log.error("Savings interest run for period ending {} failed; "
+                log.error("Weekly savings interest run for period ending {} failed; "
                                 + "later periods will wait for the retry: {}",
                         run.getPeriodEndDate(), failure.getMessage());
                 break;

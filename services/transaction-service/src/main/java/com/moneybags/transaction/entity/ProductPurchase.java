@@ -69,6 +69,15 @@ public class ProductPurchase {
     @Column(name = "reversal_transaction_id", unique = true, length = 36)
     private String reversalTransactionId;
 
+    @Column(name = "settlement_type", length = 24)
+    private String settlementType;
+
+    @Column(name = "settlement_transaction_id", unique = true, length = 36)
+    private String settlementTransactionId;
+
+    @Column(name = "settled_at")
+    private Instant settledAt;
+
     @Version
     @Column(nullable = false)
     private long version;

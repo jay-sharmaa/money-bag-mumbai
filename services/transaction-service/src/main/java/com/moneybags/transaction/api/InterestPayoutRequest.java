@@ -13,7 +13,7 @@ public record InterestPayoutRequest(
         @NotBlank String accountId,
         @NotNull @DecimalMin("1") BigDecimal amount,
         @NotBlank @Pattern(regexp = "[A-Z]{3}") String currency,
-        @NotBlank @Size(max = 36) String accrualId,
+        @NotBlank @Size(max = 36) String payoutBatchId,
         @NotNull LocalDate periodStartDate,
         @NotNull LocalDate periodEndDate,
         @NotBlank String branchCode,

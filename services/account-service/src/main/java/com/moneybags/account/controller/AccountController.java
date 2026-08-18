@@ -126,6 +126,15 @@ public class AccountController {
         return productOwnershipService.list(actors.resolve(http), accountId);
     }
 
+    @Operation(summary = "Break an active fixed deposit and return its full principal")
+    @PostMapping("/{accountId}/products/{ownershipId}/break")
+    public OwnedProductView breakFixedDeposit(@PathVariable String accountId,
+                                              @PathVariable String ownershipId,
+                                              HttpServletRequest http) {
+        return productOwnershipService.breakFixedDeposit(
+                actors.resolve(http), accountId, ownershipId);
+    }
+
     // --- Lifecycle ---------------------------------------------------------
 
     @PostMapping("/{accountId}/freeze")

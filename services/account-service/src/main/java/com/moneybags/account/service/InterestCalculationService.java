@@ -39,9 +39,9 @@ public class InterestCalculationService {
     private final AccountRepository accounts;
     private final BalanceHistoryRepository balanceHistory;
     private final InterestAccrualRepository accruals;
-    private final AccountEventPublisher events;
     private final InterestRunStateService runStates;
     private final SavingsInterestSchedule schedule;
+    private final InterestPayoutBatchService payoutBatches;
     private final PlatformTransactionManager transactionManager;
 
     public InterestRunView run(LocalDate periodEndDate, String correlationId) {
@@ -80,16 +80,16 @@ public class InterestCalculationService {
         for (Account account : eligible) {
             if (account.getOpenedOn().isAfter(periodStartDate)
                     || accruals.existsByAccountIdAndAccrualDateBetween(
-                    account.getAccountId(), periodStartDate, periodEndDate.plusDays(PERIOD_DAYS - 1L))) {
+                    account.getAccountId(), periodStartDate, periodEndDate)) {
                 skipped++;
                 continue;
             }
-            BigDecimal average = sevenDayAverage(account, periodStartDate, periodEndDate);
+            BigDecimal average = periodAverage(account, periodStartDate, periodEndDate);
             BigDecimal interest = average
                     .multiply(account.getInterestRate())
                     .multiply(BigDecimal.valueOf(PERIOD_DAYS))
                     .divide(BigDecimal.valueOf(100L * DAY_COUNT_BASIS), 6, RoundingMode.HALF_EVEN)
-                    .setScale(0, RoundingMode.HALF_UP);
+                    .setScale(6, RoundingMode.HALF_EVEN);
 
             InterestAccrual accrual = InterestAccrual.builder()
                     .accrualId(UUID.randomUUID().toString())
@@ -99,14 +99,11 @@ public class InterestCalculationService {
                     .rate(account.getInterestRate())
                     .dayCountBasis(DAY_COUNT_BASIS)
                     .accruedAmount(interest)
-                    .posted(interest.signum() == 0)
+                    .posted(false)
                     .createdAt(Instant.now())
                     .build();
             accruals.save(accrual);
-            if (interest.signum() > 0) {
-                events.enqueueInterestPayout(account, accrual, periodStartDate, correlationId);
-                queued++;
-            }
+            queued += payoutBatches.createEligibleBatches(account, correlationId);
             created.add(toView(account, accrual));
         }
         return new InterestRunView(periodStartDate, periodEndDate, eligible.size(),
@@ -135,7 +132,7 @@ public class InterestCalculationService {
                 .map(accrual -> toView(account, accrual)).toList();
     }
 
-    private BigDecimal sevenDayAverage(Account account, LocalDate start, LocalDate end) {
+    private BigDecimal periodAverage(Account account, LocalDate start, LocalDate end) {
         List<BalanceHistory> rows = balanceHistory
                 .findByAccountIdOrderByBusinessDateAscCreatedAtAsc(account.getAccountId());
         BigDecimal carried = startingBalance(account, rows, start);
@@ -147,7 +144,7 @@ public class InterestCalculationService {
                 carried = rows.get(index).getLedgerBalanceAfter();
                 index++;
             }
-            total = total.add(carried.max(BigDecimal.ZERO));
+            total = total.add(carried);
         }
         return total.divide(BigDecimal.valueOf(PERIOD_DAYS), 6, RoundingMode.HALF_EVEN);
     }
@@ -164,7 +161,7 @@ public class InterestCalculationService {
 
     private InterestAccrualView toView(Account account, InterestAccrual accrual) {
         return new InterestAccrualView(accrual.getAccrualId(), account.getAccountId(),
-                account.getProductCode(), accrual.getAccrualDate().minusDays(PERIOD_DAYS - 1L),
+                account.getProductCode(), accrual.getAccrualDate().minusDays(6),
                 accrual.getAccrualDate(), accrual.getPrincipalBase(), accrual.getRate(),
                 accrual.getDayCountBasis(), accrual.getAccruedAmount(),
                 Boolean.TRUE.equals(accrual.getPosted()), accrual.getPostedTransactionId(),

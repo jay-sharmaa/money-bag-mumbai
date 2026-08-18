@@ -3,9 +3,11 @@ package com.moneybags.transaction;
 import com.moneybags.transaction.api.TransactionModels.*;
 import com.moneybags.transaction.api.ProductPurchaseRequest;
 import com.moneybags.transaction.api.InterestPayoutRequest;
+import com.moneybags.transaction.api.FdSettlementRequest;
 import com.moneybags.transaction.client.*;
 import com.moneybags.transaction.config.TransactionProperties;
 import com.moneybags.transaction.domain.*;
+import com.moneybags.transaction.domain.FinancialEnums.HoldStatus;
 import com.moneybags.transaction.entity.Transaction;
 import com.moneybags.transaction.exception.DomainException;
 import com.moneybags.transaction.repository.*;
@@ -98,14 +100,14 @@ class TransactionServiceIntegrationTest {
                 e.transactionId().equals(first.getId())&&e.transactionType().equals("DEPOSIT")
                         &&e.amount().compareTo(new BigDecimal("5000"))==0));
     }
-    @Test void sevenDaySavingsInterestCreditsAccountLedgerAndStatement(){
-        LocalDate end=LocalDate.now().minusDays(1),start=end.minusDays(6);
-        String accrualId="11111111-1111-1111-1111-111111111111";
+    @Test void fiftyTwoWeekSavingsInterestCreditsAccountLedgerAndStatement(){
+        LocalDate end=LocalDate.now().minusDays(1),start=end.minusDays(363);
+        String payoutBatchId="11111111-1111-1111-1111-111111111111";
         InterestPayoutRequest request=new InterestPayoutRequest("A1",new BigDecimal("13"),"INR",
-                accrualId,start,end,"MB001","interest-correlation");
-        Transaction payout=orchestrator.createInterestPayout(request,"interest-payout:"+accrualId);
+                payoutBatchId,start,end,"MB001","interest-correlation");
+        Transaction payout=orchestrator.createInterestPayout(request,"interest-payout:"+payoutBatchId);
         assertThat(payout.getType()).isEqualTo(TransactionType.INTEREST_PAYOUT);
-        assertThat(payout.getReference()).isEqualTo("TXN-INT-"+accrualId);
+        assertThat(payout.getReference()).isEqualTo("TXN-INT-"+payoutBatchId);
         assertThat(payout.getStatus()).isEqualTo(TransactionStatus.PROJECTION_PENDING);
         assertThat(journals.findByTransactionIdOrderByCreatedAt(payout.getId()))
                 .singleElement().satisfies(journal ->
@@ -128,6 +130,86 @@ class TransactionServiceIntegrationTest {
         order.verify(accountClient).project(anyString(),argThat(p->p.transactionId().equals(payout.getId())));
         order.verify(ledgerClient).post(eq("transaction-service"),argThat(j->j.transactionId().equals(payout.getId())));
         order.verify(statementClient).push(eq("transaction-service"),argThat(e->e.transactionId().equals(payout.getId())));
+    }
+    @Test void fdMaturityCreditsPrincipalAndAct365Interest(){
+        ProductPurchaseRequest purchaseRequest=new ProductPurchaseRequest(
+                "A1","FD-12M",new BigDecimal("10000"),"INR",
+                PaymentChannel.WEB,"Maturity test FD","TXN-FD-MAT-PURCHASE");
+        var purchase=orchestrator.createProductPurchase(
+                purchaseRequest,"fd-maturity-purchase",maker);
+        properties.getOutbox().setEnabled(true);publisher.publish();
+        LocalDate maturity=purchase.maturityDate(),acquired=purchase.purchasedOn();
+        long days=java.time.temporal.ChronoUnit.DAYS.between(acquired,maturity);
+        BigDecimal interest=new BigDecimal("10000").multiply(new BigDecimal("6.7500"))
+                .multiply(BigDecimal.valueOf(days)).divide(new BigDecimal("36500"),2,java.math.RoundingMode.HALF_EVEN);
+        FdSettlementRequest request=new FdSettlementRequest(
+                purchase.purchaseId(),purchase.transactionId(),null,"A1",
+                new BigDecimal("10000"),interest,new BigDecimal("6.7500"),"INR",
+                FdSettlementType.MATURITY,acquired,maturity,maturity,"MB001","fd-maturity-test");
+
+        Transaction payout=orchestrator.createFdSettlement(request,"fd-maturity-1");
+
+        assertThat(payout.getType()).isEqualTo(TransactionType.FD_MATURITY_PAYOUT);
+        assertThat(payout.getAmount()).isEqualByComparingTo(new BigDecimal("10000").add(interest));
+        assertThat(journals.findByTransactionIdOrderByCreatedAt(payout.getId()))
+                .singleElement().satisfies(journal->{
+                    assertThat(journal.getType()).isEqualTo("FD_MATURITY_PAYOUT");
+                    assertThat(journal.getLines()).anySatisfy(line->{
+                        assertThat(line.getLedgerAccountCode()).isEqualTo("210100");
+                        assertThat(line.getDebit()).isEqualByComparingTo("10000");
+                    }).anySatisfy(line->{
+                        assertThat(line.getLedgerAccountCode()).isEqualTo("510200");
+                        assertThat(line.getDebit()).isEqualByComparingTo(interest);
+                    });
+                });
+        properties.getOutbox().setEnabled(true);publisher.publish();
+        assertThat(transactions.findById(payout.getId()).orElseThrow().getStatus())
+                .isEqualTo(TransactionStatus.COMPLETED);
+        verify(accountClient).project(anyString(),argThat(projection->
+                projection.accountId().equals("A1")
+                        &&"FD_MATURITY_PAYOUT_POSTED".equals(projection.eventType())
+                        &&projection.amount().compareTo(new BigDecimal("10000").add(interest))==0));
+    }
+    @Test void prematureFdBreakCreditsFullPrincipalOnly(){
+        LocalDate today=LocalDate.now(),acquired=today.minusDays(100),maturity=today.plusDays(265);
+        when(accountClient.context("FD-A1")).thenReturn(new AccountClient.AccountContext(
+                "FD-A1","AH-1","ACTIVE","INR",new BigDecimal("10000"),
+                new BigDecimal("10000"),1));
+        FdSettlementRequest request=new FdSettlementRequest(
+                "33333333-3333-3333-3333-333333333333",null,"FD-A1","A1",
+                new BigDecimal("10000"),BigDecimal.ZERO,new BigDecimal("6.7500"),"INR",
+                FdSettlementType.PREMATURE_BREAK,acquired,maturity,today,"MB001","fd-break-test");
+
+        Transaction payout=orchestrator.createFdSettlement(request,"fd-break-1");
+
+        assertThat(payout.getType()).isEqualTo(TransactionType.FD_PREMATURE_BREAK);
+        assertThat(payout.getAmount()).isEqualByComparingTo("10000");
+        assertThat(journals.findByTransactionIdOrderByCreatedAt(payout.getId()))
+                .singleElement().satisfies(journal->{
+                    assertThat(journal.getType()).isEqualTo("FD_PREMATURE_BREAK");
+                    assertThat(journal.getLines()).hasSize(2);
+                    assertThat(journal.getLines()).noneSatisfy(line->
+                            assertThat(line.getLedgerAccountCode()).isIn("510100", "510200"));
+                    assertThat(journal.getLines()).anySatisfy(line->{
+                        assertThat(line.getLedgerAccountCode()).isEqualTo("210000");
+                        assertThat(line.getAccountId()).isEqualTo("FD-A1");
+                        assertThat(line.getDebit()).isEqualByComparingTo("10000");
+                    });
+                });
+        properties.getOutbox().setEnabled(true);publisher.publish();
+        assertThat(holds.findByTransactionId(payout.getId()).orElseThrow().getStatus())
+                .isEqualTo(HoldStatus.CONSUMED);
+        verify(accountClient).reserve(eq("FD-A1"),anyString(),argThat(hold->
+                hold.amount().compareTo(new BigDecimal("10000"))==0));
+        verify(accountClient).project(anyString(),argThat(projection->
+                projection.accountId().equals("FD-A1")
+                        &&"FD_PRINCIPAL_RELEASED".equals(projection.eventType())
+                        &&"DEBIT".equals(projection.direction())
+                        &&projection.amount().compareTo(new BigDecimal("10000"))==0));
+        verify(accountClient).project(anyString(),argThat(projection->
+                projection.accountId().equals("A1")
+                        &&"FD_PREMATURE_BREAK_POSTED".equals(projection.eventType())
+                        &&projection.amount().compareTo(new BigDecimal("10000"))==0));
     }
     @Test void duplicateCreateReturnsOriginalWithoutDuplicateHoldOrFacts(){
         Transaction first=orchestrator.create(TransactionType.WITHDRAWAL,PaymentRail.CASH,withdrawal(),"wd-dup",maker);Transaction second=orchestrator.create(TransactionType.WITHDRAWAL,PaymentRail.CASH,withdrawal(),"wd-dup",maker);

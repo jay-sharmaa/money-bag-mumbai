@@ -31,14 +31,14 @@ class SavingsInterestSchedulerTest {
     @BeforeEach
     void setUp() {
         properties = new AccountProperties();
-        properties.getInterest().setFirstPeriodEnd(LocalDate.of(2026, 8, 2));
+        properties.getInterest().setFirstPeriodEnd(LocalDate.of(2026, 8, 23));
         properties.getInterest().setMaxCatchUpRuns(52);
         scheduler = new SavingsInterestScheduler(interest, runStates, schedule, properties);
     }
 
     @Test
     void recoversEveryOverdueWeekOldestFirstAndSchedulesTheNextWeek() {
-        LocalDate first = LocalDate.of(2026, 8, 2);
+        LocalDate first = LocalDate.of(2026, 8, 23);
         LocalDate second = first.plusWeeks(1);
         when(schedule.latestDuePeriodEnd(any(Instant.class))).thenReturn(second);
         when(runStates.due(any(Instant.class))).thenReturn(List.of(run(first), run(second)));

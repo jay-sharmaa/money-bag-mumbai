@@ -46,3 +46,4 @@ moneybags:
       external-clearing: "220200"
       fee-income: "410100"
       savings-interest-expense: "510100"
+      term-deposit-interest-expense: "510200"

@@ -10,7 +10,7 @@ public record InterestAccrualView(
         String productCode,
         LocalDate periodStartDate,
         LocalDate periodEndDate,
-        BigDecimal sevenDayAverageBalance,
+        BigDecimal averageBalance,
         BigDecimal annualInterestRate,
         Integer dayCountBasis,
         BigDecimal interestAmount,
