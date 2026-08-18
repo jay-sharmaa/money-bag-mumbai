@@ -2,6 +2,7 @@ package com.moneybags.transaction;
 
 import com.moneybags.transaction.api.TransactionModels.*;
 import com.moneybags.transaction.api.ProductPurchaseRequest;
+import com.moneybags.transaction.api.InterestPayoutRequest;
 import com.moneybags.transaction.client.*;
 import com.moneybags.transaction.config.TransactionProperties;
 import com.moneybags.transaction.domain.*;
@@ -96,6 +97,37 @@ class TransactionServiceIntegrationTest {
         verify(statementClient).push(eq("transaction-service"),argThat(e->
                 e.transactionId().equals(first.getId())&&e.transactionType().equals("DEPOSIT")
                         &&e.amount().compareTo(new BigDecimal("5000"))==0));
+    }
+    @Test void sevenDaySavingsInterestCreditsAccountLedgerAndStatement(){
+        LocalDate end=LocalDate.now().minusDays(1),start=end.minusDays(6);
+        String accrualId="11111111-1111-1111-1111-111111111111";
+        InterestPayoutRequest request=new InterestPayoutRequest("A1",new BigDecimal("13"),"INR",
+                accrualId,start,end,"MB001","interest-correlation");
+        Transaction payout=orchestrator.createInterestPayout(request,"interest-payout:"+accrualId);
+        assertThat(payout.getType()).isEqualTo(TransactionType.INTEREST_PAYOUT);
+        assertThat(payout.getReference()).isEqualTo("TXN-INT-"+accrualId);
+        assertThat(payout.getStatus()).isEqualTo(TransactionStatus.PROJECTION_PENDING);
+        assertThat(journals.findByTransactionIdOrderByCreatedAt(payout.getId()))
+                .singleElement().satisfies(journal ->
+                        assertThat(journal.getReference()).hasSizeLessThanOrEqualTo(64));
+        assertThat(holds.findByTransactionId(payout.getId())).isEmpty();
+        properties.getOutbox().setEnabled(true);publisher.publish();
+        assertThat(transactions.findById(payout.getId()).orElseThrow().getStatus()).isEqualTo(TransactionStatus.COMPLETED);
+        verify(accountClient).project(anyString(),argThat(p->p.transactionId().equals(payout.getId())
+                &&p.accountId().equals("A1")&&"CREDIT".equals(p.direction())
+                &&"INTEREST_PAYOUT_POSTED".equals(p.eventType())&&p.amount().compareTo(new BigDecimal("13"))==0));
+        verify(ledgerClient).post(eq("transaction-service"),argThat(j->j.transactionId().equals(payout.getId())
+                &&"INTEREST_PAYOUT".equals(j.journalType())
+                &&j.lines().get(0).ledgerCode().equals("510100")&&j.lines().get(0).side().equals("DEBIT")
+                &&j.lines().get(1).ledgerCode().equals("210000")&&j.lines().get(1).side().equals("CREDIT")
+                &&j.lines().get(1).customerAccountId().equals("A1")));
+        verify(statementClient).push(eq("transaction-service"),argThat(e->e.transactionId().equals(payout.getId())
+                &&"INTEREST_PAYOUT".equals(e.transactionType())&&"CREDIT".equals(e.direction())
+                &&e.amount().compareTo(new BigDecimal("13"))==0));
+        InOrder order=inOrder(accountClient,ledgerClient,statementClient);
+        order.verify(accountClient).project(anyString(),argThat(p->p.transactionId().equals(payout.getId())));
+        order.verify(ledgerClient).post(eq("transaction-service"),argThat(j->j.transactionId().equals(payout.getId())));
+        order.verify(statementClient).push(eq("transaction-service"),argThat(e->e.transactionId().equals(payout.getId())));
     }
     @Test void duplicateCreateReturnsOriginalWithoutDuplicateHoldOrFacts(){
         Transaction first=orchestrator.create(TransactionType.WITHDRAWAL,PaymentRail.CASH,withdrawal(),"wd-dup",maker);Transaction second=orchestrator.create(TransactionType.WITHDRAWAL,PaymentRail.CASH,withdrawal(),"wd-dup",maker);

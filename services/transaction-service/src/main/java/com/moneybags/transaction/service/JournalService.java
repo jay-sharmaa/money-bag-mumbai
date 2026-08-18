@@ -20,6 +20,7 @@ public class JournalService {
     private static final String INTERNAL_CLEARING = "Internal Payment Clearing";
     private static final String EXTERNAL_CLEARING = "External Clearing";
     private static final String FEE_INCOME = "Payment Fee Income";
+    private static final String SAVINGS_INTEREST_EXPENSE = "Savings Interest Expense";
 
     private final TransactionLegRepository legs;
     private final JournalEntryRepository journals;
@@ -35,6 +36,9 @@ public class JournalService {
             case PRODUCT_PURCHASE -> save(tx,"PRODUCT_PURCHASE",List.of(
                     dr(properties.getLedger().getAccountDepositControl(),tx.getSourceAccountId(),tx.getAmount(),CUSTOMER_DEPOSIT_CONTROL),
                     cr(properties.getLedger().getTermDepositControl(),null,tx.getAmount(),TERM_DEPOSIT_CONTROL)));
+            case INTEREST_PAYOUT -> save(tx,"INTEREST_PAYOUT",List.of(
+                    dr(properties.getLedger().getSavingsInterestExpense(),null,tx.getAmount(),SAVINGS_INTEREST_EXPENSE),
+                    cr(properties.getLedger().getAccountDepositControl(),tx.getDestinationAccountId(),tx.getAmount(),CUSTOMER_DEPOSIT_CONTROL)));
             case CHEQUE -> { }
             case REVERSAL -> throw new IllegalArgumentException("Reversal journals are created from the original transaction");
         }
@@ -64,7 +68,7 @@ public class JournalService {
     }
     private void createLegs(Transaction tx){
         List<TransactionLeg> result=new ArrayList<>(); int n=1;
-        if(tx.getType()==TransactionType.DEPOSIT||tx.getType()==TransactionType.CHEQUE) result.add(leg(tx,n++,LegRole.DESTINATION,Direction.CREDIT,tx.getDestinationAccountId(),tx.getAmount(),"Destination credit"));
+        if(tx.getType()==TransactionType.DEPOSIT||tx.getType()==TransactionType.CHEQUE||tx.getType()==TransactionType.INTEREST_PAYOUT) result.add(leg(tx,n++,LegRole.DESTINATION,Direction.CREDIT,tx.getDestinationAccountId(),tx.getAmount(),tx.getType()==TransactionType.INTEREST_PAYOUT?"Savings interest credit":"Destination credit"));
         else {
             result.add(leg(tx,n++,LegRole.SOURCE,Direction.DEBIT,tx.getSourceAccountId(),tx.getAmount(),"Source debit"));
             if(tx.getFeeAmount().signum()>0) result.add(leg(tx,n++,LegRole.FEE,Direction.DEBIT,tx.getSourceAccountId(),tx.getFeeAmount(),"Transaction fee"));

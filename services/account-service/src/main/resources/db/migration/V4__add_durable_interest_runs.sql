@@ -1,0 +1,25 @@
+CREATE TABLE interest_runs (
+    run_id               VARCHAR(36)  NOT NULL,
+    period_start_date    DATE         NOT NULL,
+    period_end_date      DATE         NOT NULL,
+    scheduled_at         DATETIME(6)  NOT NULL,
+    status               VARCHAR(20)  NOT NULL,
+    attempts             INT          NOT NULL DEFAULT 0,
+    accounts_evaluated   INT          NULL,
+    accruals_created     INT          NULL,
+    payouts_queued       INT          NULL,
+    accounts_skipped     INT          NULL,
+    started_at           DATETIME(6)  NULL,
+    completed_at         DATETIME(6)  NULL,
+    next_attempt_at      DATETIME(6)  NULL,
+    last_error           VARCHAR(500) NULL,
+    version              BIGINT       NOT NULL DEFAULT 0,
+    created_at           DATETIME(6)  NOT NULL,
+    updated_at           DATETIME(6)  NOT NULL,
+    PRIMARY KEY (run_id),
+    CONSTRAINT uk_interest_run_period_end UNIQUE (period_end_date),
+    CONSTRAINT chk_interest_run_dates CHECK (period_end_date >= period_start_date),
+    CONSTRAINT chk_interest_run_status CHECK (
+        status IN ('SCHEDULED','RUNNING','COMPLETED','FAILED')),
+    KEY idx_interest_runs_due (status, scheduled_at, next_attempt_at)
+) ENGINE = InnoDB;

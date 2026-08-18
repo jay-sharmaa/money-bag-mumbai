@@ -47,13 +47,14 @@ class LedgerServiceIntegrationTest {
     void loadsConfiguredSeedAccountsWithCorrectNormalSides() {
         assertThat(accountRepository.findAllByOrderByCodeAsc())
                 .extracting(account -> account.getCode())
-                .containsExactly("110100", "210000", "210100", "220100", "220200", "410100");
+                .containsExactly("110100", "210000", "210100", "220100", "220200", "410100", "510100");
         assertThat(accountRepository.findByCode("110100").orElseThrow().getNormalSide()).isEqualTo(EntrySide.DEBIT);
         assertThat(accountRepository.findByCode("210000").orElseThrow().getNormalSide()).isEqualTo(EntrySide.CREDIT);
         assertThat(accountRepository.findByCode("210100").orElseThrow().getNormalSide()).isEqualTo(EntrySide.CREDIT);
         assertThat(accountRepository.findByCode("220100").orElseThrow().getNormalSide()).isEqualTo(EntrySide.CREDIT);
         assertThat(accountRepository.findByCode("220200").orElseThrow().getNormalSide()).isEqualTo(EntrySide.CREDIT);
         assertThat(accountRepository.findByCode("410100").orElseThrow().getNormalSide()).isEqualTo(EntrySide.CREDIT);
+        assertThat(accountRepository.findByCode("510100").orElseThrow().getNormalSide()).isEqualTo(EntrySide.DEBIT);
     }
 
     @Test
@@ -195,6 +196,22 @@ class LedgerServiceIntegrationTest {
                         line("110100", null, EntrySide.DEBIT, "500.00"),
                         line("210000", "account-10001", EntrySide.CREDIT, "500.00")
                 ));
+    }
+
+    @Test
+    void postsSavingsInterestExpenseAndCustomerCredit() {
+        JournalResponse journal = postingService.post(new JournalPostRequest(
+                "JRN-INT-A1-2026-08-16-INTEREST_PAYOUT", "tx-interest-1",
+                "INTEREST_PAYOUT", "Seven-day savings interest", "INR", "transaction-service",
+                List.of(
+                        line("510100", null, EntrySide.DEBIT, "13.00"),
+                        line("210000", "account-10001", EntrySide.CREDIT, "13.00")
+                )));
+        assertThat(journal.totalDebit()).isEqualByComparingTo("13.00");
+        assertThat(journal.totalCredit()).isEqualByComparingTo("13.00");
+        assertBalance("510100", "13.00");
+        assertBalance("210000", "13.00");
+        assertThat(queryService.customerEntries("account-10001")).hasSize(1);
     }
 
     private JournalLineRequest line(String code, String accountId, EntrySide side, String amount) {

@@ -6,15 +6,32 @@
   <component name="ChangeListManager">
     <list default="true" id="3ed1cd6b-f7be-4008-9942-5ef42f39a0a8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/controller/BeneficiaryController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/controller/BeneficiaryHistoryController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/BeneficiaryHistoryService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/BeneficiaryService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/CustomerOperationsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/CustomerOperationsService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/impl/BeneficiaryHistoryServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/impl/BeneficiaryServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/impl/CustomerOperationsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/service/impl/CustomerOperationsServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/SEED_FIXTURES.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/SEED_FIXTURES.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/client/TransactionClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/client/TransactionClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/config/AccountProperties.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/config/AccountProperties.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/AccountRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/AccountRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/BalanceHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/BalanceHistoryRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/InterestAccrualRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/repository/InterestAccrualRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountEventPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountEventPublisher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountOutboxPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/java/com/moneybags/account/service/AccountOutboxPublisher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountOpenApiIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountOpenApiIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountProductOwnershipMigrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/test/java/com/moneybags/account/AccountProductOwnershipMigrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/account-service/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/services/account-service/src/test/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/config/OpenApiConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/customer-service/src/main/java/com/moneybags/customer/config/OpenApiConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/customer-service/src/test/java/com/moneybags/customer/CustomerServiceIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/customer-service/src/test/java/com/moneybags/customer/CustomerServiceIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/ledger-service/src/test/java/com/moneybags/ledger/LedgerServiceIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/ledger-service/src/test/java/com/moneybags/ledger/LedgerServiceIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryMigrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/product-service/src/test/java/com/moneybags/product/ProductHistoryMigrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/statement-reporting-service/src/test/java/com/moneybags/statement/StatementReportingIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/statement-reporting-service/src/test/java/com/moneybags/statement/StatementReportingIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/config/TransactionProperties.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/config/TransactionProperties.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/controller/InternalTransactionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/controller/InternalTransactionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/domain/TransactionType.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/domain/TransactionType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/JournalService.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/JournalService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/LedgerPostingCatalog.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/LedgerPostingCatalog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/TransactionOrchestrator.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/java/com/moneybags/transaction/service/TransactionOrchestrator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/transaction-service/src/test/java/com/moneybags/transaction/TransactionServiceIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/services/transaction-service/src/test/java/com/moneybags/transaction/TransactionServiceIntegrationTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -235,7 +252,9 @@
       <workItem from="1786800969091" duration="5210000" />
       <workItem from="1786853533759" duration="7534000" />
       <workItem from="1786873696374" duration="6218000" />
-      <workItem from="1786940288841" duration="2337000" />
+      <workItem from="1786940288841" duration="7186000" />
+      <workItem from="1786956524013" duration="1289000" />
+      <workItem from="1786974886463" duration="152000" />
     </task>
     <servers />
   </component>

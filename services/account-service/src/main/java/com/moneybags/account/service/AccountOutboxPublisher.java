@@ -6,10 +6,13 @@ import com.moneybags.account.client.AuditClient;
 import com.moneybags.account.client.StatementClient;
 import com.moneybags.account.client.TransactionClient;
 import com.moneybags.account.client.TransactionClient.OpeningDepositCommand;
+import com.moneybags.account.client.TransactionClient.InterestPayoutCommand;
+import com.moneybags.account.client.TransactionClient.InterestPayoutResult;
 import com.moneybags.account.config.AccountProperties;
 import com.moneybags.account.entity.AccountOutbox;
 import com.moneybags.account.entity.OutboxStatus;
 import com.moneybags.account.repository.AccountOutboxRepository;
+import com.moneybags.account.repository.InterestAccrualRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +45,7 @@ public class AccountOutboxPublisher {
     private final TransactionClient transactionClient;
     private final ObjectMapper objectMapper;
     private final AccountProperties properties;
+    private final InterestAccrualRepository interestAccruals;
 
     @Scheduled(fixedDelayString = "${moneybags.account.outbox.fixed-delay-ms:5000}")
     @Transactional
@@ -68,10 +72,25 @@ public class AccountOutboxPublisher {
                     auditClient.append(SERVICE_NAME, toAuditEvent(event, payload));
                 }
                 case AccountEventPublisher.DESTINATION_TRANSACTION -> {
-                    OpeningDepositCommand command = objectMapper.readValue(
-                            event.getPayload(), OpeningDepositCommand.class);
-                    transactionClient.createOpeningDeposit(SERVICE_NAME,
-                            "opening-deposit:" + event.getAggregateId(), command);
+                    if ("INTEREST_PAYOUT_REQUESTED".equals(event.getEventType())) {
+                        InterestPayoutCommand command = objectMapper.readValue(
+                                event.getPayload(), InterestPayoutCommand.class);
+                        InterestPayoutResult result = transactionClient.createInterestPayout(
+                                SERVICE_NAME, "interest-payout:" + command.accrualId(), command);
+                        var accrual = interestAccruals.findById(command.accrualId()).orElseThrow();
+                        accrual.setPostedTransactionId(result.id());
+                        if (!"COMPLETED".equals(result.status())) {
+                            interestAccruals.save(accrual);
+                            throw new IllegalStateException("Interest payout transaction "
+                                    + result.id() + " is " + result.status());
+                        }
+                        accrual.setPosted(true);
+                    } else {
+                        OpeningDepositCommand command = objectMapper.readValue(
+                                event.getPayload(), OpeningDepositCommand.class);
+                        transactionClient.createOpeningDeposit(SERVICE_NAME,
+                                "opening-deposit:" + event.getAggregateId(), command);
+                    }
                 }
                 default -> throw new IllegalStateException(
                         "Unknown outbox destination " + event.getDestination());

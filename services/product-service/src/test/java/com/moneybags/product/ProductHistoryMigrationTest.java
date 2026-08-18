@@ -23,7 +23,7 @@ class ProductHistoryMigrationTest {
     @Autowired ProductService productService;
 
     @Test
-    void migrationBackfillsTheFourSelectedProductsWithoutChangingCurrentRows() {
+    void migrationPreservesOriginalTermsAndPublishesWeeklySavingsVersions() {
         Integer currentProducts = jdbc.queryForObject("SELECT COUNT(*) FROM products", Integer.class);
         Integer versionedProducts = jdbc.queryForObject("SELECT COUNT(*) FROM product_versions", Integer.class);
         Integer distinctVersionedProducts = jdbc.queryForObject(
@@ -35,9 +35,22 @@ class ProductHistoryMigrationTest {
                 BigDecimal.class);
 
         assertThat(currentProducts).isEqualTo(6);
-        assertThat(versionedProducts).isEqualTo(4);
+        assertThat(versionedProducts).isEqualTo(6);
         assertThat(distinctVersionedProducts).isEqualTo(4);
         assertThat(historicalRate).isEqualByComparingTo(currentRate);
+        assertThat(jdbc.queryForObject(
+                "SELECT rule_value FROM product_version_rules pvr "
+                        + "JOIN product_versions pv ON pv.product_version_id = pvr.product_version_id "
+                        + "WHERE pv.product_code = 'SAV-REG' AND pv.version_number = 1 "
+                        + "AND pvr.rule_key = 'INTEREST_PAYOUT'", String.class)).isEqualTo("QUARTERLY");
+        assertThat(jdbc.queryForObject(
+                "SELECT rule_value FROM product_version_rules pvr "
+                        + "JOIN product_versions pv ON pv.product_version_id = pvr.product_version_id "
+                        + "WHERE pv.product_code = 'SAV-REG' AND pv.version_number = 2 "
+                        + "AND pvr.rule_key = 'INTEREST_PAYOUT'", String.class)).isEqualTo("WEEKLY");
+        assertThat(jdbc.queryForObject(
+                "SELECT rule_value FROM product_rules WHERE product_code = 'SAV-REG' "
+                        + "AND rule_key = 'INTEREST_PAYOUT'", String.class)).isEqualTo("WEEKLY");
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM product_version_charges", Integer.class)).isPositive();
         assertThat(jdbc.queryForObject(
@@ -47,5 +60,8 @@ class ProductHistoryMigrationTest {
         assertThat(effective.versionNumber()).isEqualTo(1);
         assertThat(effective.productVersionId()).isNotNull();
         assertThat(effective.interestRate()).isEqualByComparingTo(currentRate);
+
+        EffectiveProduct weekly = productService.effective("SAV-REG", LocalDate.of(2026, 8, 17));
+        assertThat(weekly.versionNumber()).isEqualTo(2);
     }
 }

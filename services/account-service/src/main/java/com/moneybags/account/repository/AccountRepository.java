@@ -11,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 
 public interface AccountRepository extends JpaRepository<Account, String> {
 
@@ -45,4 +47,6 @@ public interface AccountRepository extends JpaRepository<Account, String> {
                          Pageable pageable);
 
     long countByCifNoAndStatus(String cifNo, AccountStatus status);
+
+    List<Account> findByStatusAndProductCodeIn(AccountStatus status, Collection<String> productCodes);
 }

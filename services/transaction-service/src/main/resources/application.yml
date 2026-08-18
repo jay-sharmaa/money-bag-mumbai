@@ -45,3 +45,4 @@ moneybags:
       internal-clearing: "220100"
       external-clearing: "220200"
       fee-income: "410100"
+      savings-interest-expense: "510100"

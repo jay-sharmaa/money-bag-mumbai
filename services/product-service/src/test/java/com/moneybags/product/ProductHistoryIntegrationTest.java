@@ -105,7 +105,11 @@ class ProductHistoryIntegrationTest {
                 .andExpect(jsonPath("$['paths']['/api/v1/products/{productCode}/versions']").exists())
                 .andExpect(jsonPath("$['paths']['/api/v1/products/{productCode}/versions/{versionNumber}']").exists())
                 .andExpect(jsonPath("$['paths']['/api/v1/products/{productCode}/as-of']").exists())
-                .andExpect(jsonPath("$['components']['schemas']['UpdateProductRequest']").exists());
+                .andExpect(jsonPath("$['components']['schemas']['UpdateProductRequest']").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.sessionId.type").value("apiKey"))
+                .andExpect(jsonPath("$.components.securitySchemes.sessionId.in").value("header"))
+                .andExpect(jsonPath("$.components.securitySchemes.sessionId.name").value("X-Session-Id"))
+                .andExpect(jsonPath("$.security[0].sessionId").isArray());
     }
 
     private CreateProductRequest request(String code, String name, ProductType type,

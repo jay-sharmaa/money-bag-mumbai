@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @FeignClient(name = "transaction-service")
 public interface TransactionClient {
@@ -15,6 +16,11 @@ public interface TransactionClient {
                               @RequestHeader("Idempotency-Key") String idempotencyKey,
                               @RequestBody OpeningDepositCommand command);
 
+    @PostMapping("/internal/v1/transactions/interest-payouts")
+    InterestPayoutResult createInterestPayout(@RequestHeader("X-Service-Name") String serviceName,
+                                              @RequestHeader("Idempotency-Key") String idempotencyKey,
+                                              @RequestBody InterestPayoutCommand command);
+
     record OpeningDepositCommand(
             String accountId,
             BigDecimal amount,
@@ -23,5 +29,19 @@ public interface TransactionClient {
             String initiatedByEmployeeId,
             String branchCode,
             String correlationId) {
+    }
+
+    record InterestPayoutCommand(
+            String accountId,
+            BigDecimal amount,
+            String currency,
+            String accrualId,
+            LocalDate periodStartDate,
+            LocalDate periodEndDate,
+            String branchCode,
+            String correlationId) {
+    }
+
+    record InterestPayoutResult(String id, String reference, String status) {
     }
 }

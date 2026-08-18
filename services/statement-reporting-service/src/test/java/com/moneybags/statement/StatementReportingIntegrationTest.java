@@ -43,5 +43,29 @@ class StatementReportingIntegrationTest {
         var denied=auth("STATEMENT_VIEW");denied.set("X-Customer-Id","other-cif");
         mvc.perform(get("/api/v1/statements/accounts/{id}/mini",account).headers(denied)).andExpect(status().isForbidden());
     }
+
+    @Test void savingsInterestAppearsInStatementsAndInterestReports() throws Exception {
+        mvc.perform(post("/internal/v1/statement-read-model/transactions")
+                .header("X-Service-Name", "transaction-service")
+                .contentType(MediaType.APPLICATION_JSON).content("""
+                  {"sourceEventId":"interest-event-1","transactionId":"interest-tx-1","ledgerEntryId":"interest-ledger-1","transactionReference":"TXN-INT-1","accountId":"account-1","customerId":"cif-1","branchId":"branch-1","direction":"CREDIT","amount":3.00,"feeAmount":0,"currency":"INR","transactionType":"INTEREST_PAYOUT","status":"SUCCESS","narration":"Savings interest 2026-07-27 to 2026-08-02","postedAt":"2026-08-02T00:10:00Z","balanceAfter":1253.00,"sourceUpdatedAt":"2026-08-02T00:10:01Z"}
+                  """))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/v1/statements/accounts/{id}/mini", account)
+                        .headers(auth("STATEMENT_VIEW")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.entries[0].type").value("INTEREST_PAYOUT"))
+                .andExpect(jsonPath("$.entries[0].direction").value("CREDIT"))
+                .andExpect(jsonPath("$.entries[0].amount.amount").value("3.00"));
+
+        mvc.perform(get("/api/v1/reports/interest-accruals")
+                        .param("from", "2026-08-01").param("to", "2026-08-31")
+                        .headers(auth("REPORT_VIEW")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].accountId").value(account))
+                .andExpect(jsonPath("$[0].accrued.amount").value("3.00"));
+    }
+
     private org.springframework.http.HttpHeaders auth(String permission){var h=new org.springframework.http.HttpHeaders();h.set("X-User-Id",user);h.set("X-Customer-Id","cif-1");h.set("X-Permissions",permission);h.set("X-Correlation-Id","test-correlation");return h;}
 }

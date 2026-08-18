@@ -3,6 +3,7 @@ package com.moneybags.transaction.service;
 import com.moneybags.transaction.api.TransactionModels.*;
 import com.moneybags.transaction.api.ProductPurchaseRequest;
 import com.moneybags.transaction.api.ProductPurchaseResponse;
+import com.moneybags.transaction.api.InterestPayoutRequest;
 import com.moneybags.transaction.client.*;
 import com.moneybags.transaction.domain.*;
 import com.moneybags.transaction.domain.FinancialEnums.*;
@@ -57,6 +58,26 @@ public class TransactionOrchestrator {
                 ? UUID.randomUUID().toString() : request.correlationId());
         return create(TransactionType.DEPOSIT, PaymentRail.CASH, deposit,
                 idempotencyKey, actor, true);
+    }
+
+    @Transactional
+    public Transaction createInterestPayout(InterestPayoutRequest request, String idempotencyKey) {
+        if (request.periodEndDate().isBefore(request.periodStartDate())
+                || !request.periodStartDate().plusDays(6).equals(request.periodEndDate())) {
+            throw DomainException.invalid("INVALID_INTEREST_PERIOD",
+                    "An interest payout must cover exactly seven consecutive days");
+        }
+        CreateRequest payout = new CreateRequest(
+                null, request.accountId(), null, request.amount(), BigDecimal.ZERO,
+                request.currency(), PaymentChannel.INTERNAL, PaymentMethod.ACCOUNT,
+                null, null,
+                "Savings interest for " + request.periodStartDate() + " to " + request.periodEndDate(),
+                "TXN-INT-" + request.accrualId());
+        RequestActor actor = new RequestActor("interest-engine", request.branchCode(),
+                Set.of("TRANSACTION_CREATE"), request.correlationId() == null
+                ? request.accrualId() : request.correlationId());
+        return create(TransactionType.INTEREST_PAYOUT, PaymentRail.INTERNAL, payout,
+                idempotencyKey, actor, false);
     }
 
     @Transactional
@@ -158,7 +179,8 @@ public class TransactionOrchestrator {
         String operation = "CREATE_" + type;
         var claim = idempotency.claim(actor.callerScope(), operation, idempotencyKey, hasher.hash(List.of(type, rail, request)));
         if (claim.replay()) return claim.record().getTransaction();
-        boolean approvalRequired = !openingDeposit && quote.approvalRequired();
+        boolean approvalRequired = !openingDeposit && type != TransactionType.INTEREST_PAYOUT
+                && quote.approvalRequired();
         Transaction tx = Transaction.builder().reference(reference(request.clientReference())).type(type).rail(rail).channel(request.paymentChannel()).method(request.paymentMethod())
                 .sourceAccountId(request.sourceAccountId()).destinationAccountId(request.destinationAccountId()).accountHolderId(operatingAccount.accountHolderId())
                 .amount(request.amount()).feeAmount(fee(request)).currency(request.currency()).status(TransactionStatus.RECEIVED).makerEmployeeId(actor.employeeId()).branchCode(actor.branchCode())
@@ -295,10 +317,11 @@ public class TransactionOrchestrator {
         if (tx.getType().externallyCleared())
             clearing.save(ClearingInstruction.builder().transaction(tx).rail(tx.getRail()).status(ClearingStatus.CREATED).amount(tx.getAmount()).currency(tx.getCurrency()).build());
         if (tx.getType() == TransactionType.CHEQUE) return;
-        if (tx.getType() == TransactionType.DEPOSIT)
+        if (tx.getType() == TransactionType.DEPOSIT || tx.getType() == TransactionType.INTEREST_PAYOUT)
             outbox.accountProjection(tx, tx.getDestinationAccountId(), "CREDIT", tx.getAmount(),
-                    openingDeposit ? "OPENING_DEPOSIT_POSTED" : "DEPOSIT_POSTED",
-                    null, "deposit-credit");
+                    tx.getType() == TransactionType.INTEREST_PAYOUT ? "INTEREST_PAYOUT_POSTED"
+                            : openingDeposit ? "OPENING_DEPOSIT_POSTED" : "DEPOSIT_POSTED",
+                    null, tx.getType() == TransactionType.INTEREST_PAYOUT ? "interest-credit" : "deposit-credit");
         else {
             String hold = holds.findByTransactionId(tx.getId()).map(FundsHold::getExternalHoldId).orElse(null);
             String eventType = switch (tx.getType()) {
@@ -346,7 +369,8 @@ public class TransactionOrchestrator {
 
     private AccountClient.AccountContext validateAccounts(TransactionType type, CreateRequest r,
                                                            boolean allowPendingActivation) {
-        if (type == TransactionType.DEPOSIT || type == TransactionType.CHEQUE)
+        if (type == TransactionType.DEPOSIT || type == TransactionType.CHEQUE
+                || type == TransactionType.INTEREST_PAYOUT)
             return activeAccount(r.destinationAccountId(), r.currency(),
                     allowPendingActivation && type == TransactionType.DEPOSIT);
         AccountClient.AccountContext source = activeAccount(r.sourceAccountId(), r.currency());
@@ -399,6 +423,7 @@ public class TransactionOrchestrator {
             case CHEQUE -> PaymentRail.CHEQUE;
             case CARD_PAYMENT -> PaymentRail.CARD;
             case PRODUCT_PURCHASE -> PaymentRail.INTERNAL;
+            case INTEREST_PAYOUT -> PaymentRail.INTERNAL;
             case REVERSAL -> PaymentRail.INTERNAL;
         };
         if (rail != expected)
@@ -416,7 +441,8 @@ public class TransactionOrchestrator {
     }
 
     private void reserveForReversalIfNeeded(Transaction reversal, Transaction original) {
-        if (original.getType() == TransactionType.DEPOSIT)
+        if (original.getType() == TransactionType.DEPOSIT
+                || original.getType() == TransactionType.INTEREST_PAYOUT)
             reserve(reversal, original.getDestinationAccountId(), original.getAmount());
         else if (original.getType() == TransactionType.INTERNAL_TRANSFER)
             reserve(reversal, original.getDestinationAccountId(), original.getAmount());

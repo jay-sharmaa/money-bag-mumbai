@@ -1,25 +1,23 @@
-package com.moneybags.customer.config;
+package com.moneybags.product.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
+
     @Bean
-    OpenAPI customerOpenApi() {
+    OpenAPI productServiceOpenApi() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Moneybags Customer Service API")
-                        .description("CIF, KYC, addresses, risk, communication preferences, nominees, beneficiaries and outbox events. Authenticate Swagger requests with the session ID returned by POST /api/v1/auth/login.")
+                        .title("MoneyBags Product Service API")
+                        .description("Product catalogue, immutable product history, charges, and rules. Authenticate Swagger requests with the session ID returned by POST /api/v1/auth/login.")
                         .version("v1"))
-                .addServersItem(new Server().url("http://localhost:8090").description("API Gateway"))
-                .addServersItem(new Server().url("http://localhost:8082").description("Customer Service directly"))
                 .components(new Components().addSecuritySchemes("sessionId", sessionIdScheme()))
                 .addSecurityItem(new SecurityRequirement().addList("sessionId"));
     }

@@ -28,6 +28,11 @@ class AccountProductOwnershipMigrationTest {
                 ownerships.next();
                 assertThat(ownerships.getInt(1)).isEqualTo(3);
             }
+            try (var interestRuns = statement.executeQuery(
+                    "SELECT COUNT(*) FROM interest_runs")) {
+                interestRuns.next();
+                assertThat(interestRuns.getInt(1)).isZero();
+            }
             try (var rows = statement.executeQuery("""
                     SELECT owner_account_id, product_code, interest_rate, status,
                            product_version_number

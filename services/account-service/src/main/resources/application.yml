@@ -31,6 +31,16 @@ moneybags:
     reconciliation:
       enabled: true
       fixed-delay-ms: 60000
+    interest:
+      enabled: true
+      check-delay-ms: 60000
+      initial-delay-ms: 10000
+      first-period-end: 2026-08-16
+      run-hour-utc: 0
+      run-minute-utc: 10
+      max-catch-up-runs: 52
+      stale-after-minutes: 30
+      retry-delay-minutes: 5
 
 eureka:
   client:

@@ -11,4 +11,8 @@ public interface InterestAccrualRepository extends JpaRepository<InterestAccrual
     Optional<InterestAccrual> findByAccountIdAndAccrualDate(String accountId, LocalDate accrualDate);
 
     List<InterestAccrual> findByAccountIdOrderByAccrualDateDesc(String accountId);
+
+    List<InterestAccrual> findByAccrualDateOrderByAccountIdAsc(LocalDate accrualDate);
+
+    boolean existsByAccountIdAndAccrualDateBetween(String accountId, LocalDate from, LocalDate to);
 }

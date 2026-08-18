@@ -23,6 +23,8 @@ class AccountOpenApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.info.title").value("MoneyBags Account Service API"))
                 .andExpect(jsonPath("$.paths['/api/v1/accounts/{accountId}/products']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/accounts/interest-runs']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/accounts/{accountId}/interest-accruals']").exists())
                 .andExpect(jsonPath("$.components.schemas.OwnedProductView").exists());
     }
 }

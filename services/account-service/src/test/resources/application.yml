@@ -17,3 +17,7 @@ spring:
 eureka:
   client:
     enabled: false
+moneybags:
+  account:
+    interest:
+      enabled: false

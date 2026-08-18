@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moneybags.account.api.InternalModels.AccountEvent;
 import com.moneybags.account.client.TransactionClient.OpeningDepositCommand;
+import com.moneybags.account.client.TransactionClient.InterestPayoutCommand;
 import com.moneybags.account.entity.Account;
 import com.moneybags.account.entity.AccountApplication;
 import com.moneybags.account.entity.AccountOutbox;
+import com.moneybags.account.entity.InterestAccrual;
 import com.moneybags.account.entity.OutboxStatus;
 import com.moneybags.account.repository.AccountOutboxRepository;
 import com.moneybags.account.security.RequestActor;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
@@ -50,6 +53,16 @@ public class AccountEventPublisher {
                 approver.employeeId(), account.getBranchCode(), approver.correlationId());
         save(UUID.randomUUID().toString(), account.getAccountId(),
                 "OPENING_DEPOSIT_REQUESTED", DESTINATION_TRANSACTION, command, true);
+    }
+
+    public void enqueueInterestPayout(Account account, InterestAccrual accrual,
+                                      LocalDate periodStartDate, String correlationId) {
+        InterestPayoutCommand command = new InterestPayoutCommand(
+                account.getAccountId(), accrual.getAccruedAmount(), account.getCurrency(),
+                accrual.getAccrualId(), periodStartDate, accrual.getAccrualDate(),
+                account.getBranchCode(), correlationId);
+        save(UUID.randomUUID().toString(), account.getAccountId(),
+                "INTEREST_PAYOUT_REQUESTED", DESTINATION_TRANSACTION, command, true);
     }
 
     private void enqueue(Account account, String eventType, String destination) {
@@ -91,7 +104,7 @@ public class AccountEventPublisher {
                     .build());
         } catch (JsonProcessingException ex) {
             if (financialCommand) {
-                throw new IllegalStateException("Could not serialise opening deposit command", ex);
+                throw new IllegalStateException("Could not serialise financial command", ex);
             }
             // Never fail the business transaction for a serialisation problem in a
             // downstream projection; the account change itself is what matters.

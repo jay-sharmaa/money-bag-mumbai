@@ -56,6 +56,16 @@ class CustomerServiceIntegrationTest {
     }
 
     @Test
+    void openApiAdvertisesGatewaySessionAuthorization() throws Exception {
+        mockMvc.perform(get("/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.sessionId.type").value("apiKey"))
+                .andExpect(jsonPath("$.components.securitySchemes.sessionId.in").value("header"))
+                .andExpect(jsonPath("$.components.securitySchemes.sessionId.name").value("X-Session-Id"))
+                .andExpect(jsonPath("$.security[0].sessionId").isArray());
+    }
+
+    @Test
     void createsCustomerWithGeneratedCifAndRejectsDuplicatePanOrUser() {
         String cif = createCustomer();
         assertThat(cif).startsWith("CIF");

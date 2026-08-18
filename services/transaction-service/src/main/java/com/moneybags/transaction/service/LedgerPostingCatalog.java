@@ -18,7 +18,8 @@ public class LedgerPostingCatalog {
             "210100", "Term Deposit Control",
             "220100", "Internal Payment Clearing",
             "220200", "External Clearing",
-            "410100", "Payment Fee Income");
+            "410100", "Payment Fee Income",
+            "510100", "Savings Interest Expense");
 
     public LedgerClient.JournalPostRequest request(Transaction transaction, JournalEntry journal) {
         String type = postingType(transaction, journal);
@@ -46,6 +47,7 @@ public class LedgerPostingCatalog {
         if (transaction.getType() == TransactionType.DEPOSIT) return "DEPOSIT";
         if (transaction.getType() == TransactionType.WITHDRAWAL) return "WITHDRAWAL";
         if (transaction.getType() == TransactionType.PRODUCT_PURCHASE) return "PRODUCT_PURCHASE";
+        if (transaction.getType() == TransactionType.INTEREST_PAYOUT) return "INTEREST_PAYOUT";
         return "PAYMENT";
     }
 
@@ -54,6 +56,7 @@ public class LedgerPostingCatalog {
             case "DEPOSIT" -> "Customer deposit journal";
             case "WITHDRAWAL" -> "Customer withdrawal journal";
             case "PRODUCT_PURCHASE" -> "Term deposit purchase journal";
+            case "INTEREST_PAYOUT" -> "Savings interest payout journal";
             case "PAYMENT" -> "Customer payment journal";
             case "SETTLEMENT" -> "Payment settlement journal";
             case "REVERSAL" -> "Transaction reversal journal";
